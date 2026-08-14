@@ -30,6 +30,14 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// API Health Endpoint
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'PillSync API is running'
+  });
+});
+
 // Mount API Routing modules
 app.use('/api/patients', require('./routes/patientRoutes'));
 app.use('/api/medications', require('./routes/medicationRoutes'));
