@@ -9,6 +9,7 @@ const app = express();
 // Configure CORS for both development and production
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  'https://pill-s-ync-fi21-rajabhay532-1727s-projects.vercel.app',
   'https://pillsync-3.onrender.com',
   'http://localhost:5173',
   'http://localhost:5000'
@@ -16,10 +17,10 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV === 'production') {
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
       return callback(null, true);
     }
-    return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   optionsSuccessStatus: 200
