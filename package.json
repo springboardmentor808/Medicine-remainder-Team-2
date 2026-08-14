@@ -1,0 +1,19 @@
+{
+  "name": "pillsync-healthcare-management-system",
+  "version": "1.0.0",
+  "description": "Production-ready MERN Healthcare & Medication Tracking System.",
+  "main": "backend/server.js",
+  "scripts": {
+    "setup": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "postinstall": "cd backend && npm install --include=dev && cd ../frontend && npm install --include=dev",
+    "build": "cd frontend && npm install --include=dev && npm run build",
+    "start": "cd backend && node server.js",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "seed": "cd backend && npm run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
