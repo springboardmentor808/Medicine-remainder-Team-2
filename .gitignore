@@ -28,3 +28,21 @@ Thumbs.db
 .idea/
 .vite/
 **/.vite/
+# Django
+django_backend/__pycache__/
+django_backend/*/__pycache__/
+django_backend/*/*/__pycache__/
+django_backend/*.pyc
+django_backend/*/*.pyc
+
+# Virtual environment
+django_backend/venv/
+django_backend/env/
+
+# SQLite database
+django_backend/db.sqlite3
+
+# Django media files
+django_backend/media/
+django_backend/media/
+django_backend/venv/
