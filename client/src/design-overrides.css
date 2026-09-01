@@ -1,0 +1,158 @@
+/* === PillSync Global UX: tactile, accessible, 48px tap targets === */
+
+.sidebar nav button {
+  position: relative;
+  transition: background .15s ease, color .15s ease, transform .15s ease;
+}
+
+.sidebar nav button:active,
+.role-options button:active,
+.primary-button:active,
+.outline-button:active {
+  transform: scale(.96);
+}
+
+/* Tactile: every clickable element gets lift + press */
+.primary-button, .outline-button, .role-options button, .sidebar nav button, .sidebar-bottom button,
+.medicine-card button, .dose-block-btn, .patient-card, .locale-switcher button {
+  transition: all 200ms ease-in-out;
+}
+.primary-button:hover, .outline-button:hover, .dose-block-btn:hover {
+  transform: translateY(-1px);
+}
+.primary-button:active, .outline-button:active, .dose-block-btn:active {
+  transform: scale(0.98);
+}
+
+/* Focus rings: visible for keyboard/elderly navigation */
+.primary-button:focus-visible, .outline-button:focus-visible,
+.dose-block-btn:focus-visible, .patient-card:focus-visible,
+.medicine-card button:focus-visible {
+  outline: 3px solid rgba(44, 122, 89, .25);
+  outline-offset: 2px;
+}
+
+.sidebar nav button.active::after {
+  content: '';
+  position: absolute;
+  right: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2c7a59;
+  box-shadow: 0 0 0 3px rgba(44, 122, 89, .1);
+}
+
+.sidebar nav button.active .nav-icon {
+  font-weight: 700;
+  transform: scale(1.04);
+}
+
+.primary-button:disabled {
+  opacity: .55;
+  cursor: wait;
+  transform: none;
+}
+
+.role-options button:focus-visible,
+.sidebar button:focus-visible,
+.primary-button:focus-visible,
+.outline-button:focus-visible,
+.text-button:focus-visible {
+  outline: 3px solid rgba(44, 122, 89, .2);
+  outline-offset: 3px;
+}
+
+/* 48x48 minimum tap targets for elderly */
+.dose-block-btn { min-height: 48px; min-width: 48px; }
+.locale-switcher button { min-height: 32px; min-width: 44px; }
+.primary-button, .outline-button { min-height: 44px; }
+
+/* Dose block segmented control */
+.dose-block-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-top: 10px;
+}
+.dose-block-btn {
+  border: 1px solid #e2e8e1;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px 6px;
+  font: 700 12px 'DM Sans';
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #24302b;
+}
+.dose-block-btn.taken { border-color: #a9cdb6; }
+.dose-block-btn.taken.active { background: #2c7a59; color: #fff; border-color: #2c7a59; }
+.dose-block-btn.missed.active { background: #a35d4c; color: #fff; border-color: #a35d4c; }
+.dose-block-btn.snooze.active { background: #8a7a2b; color: #fff; border-color: #8a7a2b; }
+.dose-block-btn .dose-icon { font-size: 16px; }
+
+/* Snooze modal */
+.snooze-sheet {
+  position: fixed;
+  inset: 0;
+  background: rgba(30,45,36,.28);
+  display: grid;
+  place-items: end center;
+  padding: 0;
+  z-index: 30;
+}
+.snooze-sheet-card {
+  background: #fff;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px 16px 0 0;
+  padding: 20px;
+  animation: slideUp .22s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.snooze-option {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #e2e8e1;
+  background: #fff;
+  border-radius: 10px;
+  font: 600 14px 'DM Sans';
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.snooze-option:hover { background: #edf7f0; border-color: #a9cdb6; transform: translateY(-1px); }
+.snooze-option:active { transform: scale(0.98); }
+
+/* Care Circle filter + spinner */
+.care-banner-clickable { cursor: pointer; transition: transform .2s; }
+.care-banner-clickable:hover { transform: translateY(-1px); }
+.care-banner-clickable:active { transform: scale(0.98); }
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid #e2e8e1;
+  border-top-color: #2c7a59;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.slide-down { animation: slideDown .3s ease-out; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 560px) {
+  .role-card h1 { font-size: 40px; }
+  .role-options { grid-template-columns: 1fr; gap: 12px; }
+  .role-options button { padding: 18px; }
+  .role-footer { bottom: 18px; }
+  .sidebar nav button.active::after {
+    right: calc(50% - 3px);
+    bottom: 1px;
+  }
+  .dose-block-group { gap: 4px; }
+  .dose-block-btn { font-size: 11px; padding: 8px 4px; }
+}
