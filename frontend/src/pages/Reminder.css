@@ -1,0 +1,748 @@
+/* ============================================================
+   PILLSYNC REMINDER PAGE
+   ============================================================ */
+
+.reminder-main {
+    min-height: 100vh;
+    margin-left: 250px;
+    padding: 100px 34px 45px;
+    background: #f6f8fb;
+    box-sizing: border-box;
+}
+
+.reminder-container {
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.reminder-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.reminder-eyebrow {
+    margin-bottom: 7px;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 1.4px;
+}
+
+.reminder-header h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 31px;
+    font-weight: 750;
+    letter-spacing: -0.7px;
+}
+
+.reminder-header p {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.dashboard-button {
+    min-height: 40px;
+    padding: 0 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.dashboard-button:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+}
+
+
+/* ============================================================
+   MESSAGES
+   ============================================================ */
+
+.success-message,
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.success-message {
+    background: #ecfdf3;
+    border: 1px solid #bbf7d0;
+    color: #15803d;
+}
+
+.error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+
+
+/* ============================================================
+   CARD
+   ============================================================ */
+
+.reminder-card {
+    margin-bottom: 22px;
+    padding: 23px;
+    border: 1px solid #e5eaf0;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 21px;
+}
+
+.card-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #eff6ff;
+    font-size: 18px;
+}
+
+.card-header h2 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 16px;
+}
+
+.card-header p {
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.reminder-count {
+    margin-left: auto;
+    min-width: 27px;
+    height: 27px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 10px;
+    font-weight: 750;
+}
+
+
+/* ============================================================
+   FORM
+   ============================================================ */
+
+.reminder-form {
+    display: grid;
+    grid-template-columns: 1fr 220px 180px;
+    gap: 15px;
+    align-items: end;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #475569;
+    font-size: 10px;
+    font-weight: 650;
+}
+
+.form-group select,
+.form-group input {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 11px;
+    box-sizing: border-box;
+    border: 1px solid #dbe2ea;
+    border-radius: 8px;
+    outline: none;
+    background: #ffffff;
+    color: #334155;
+    font-size: 11px;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+
+/* ============================================================
+   AUTOMATIC PERIOD PREVIEW
+   ============================================================ */
+
+.period-preview {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 11px;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    border: 1px solid #dbe2ea;
+    border-radius: 8px;
+
+    background: #f8fafc;
+    color: #334155;
+
+    font-size: 11px;
+
+    transition: 0.2s ease;
+}
+
+.period-preview span {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.period-preview strong {
+    color: #334155;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   ADD REMINDER BUTTON
+   ============================================================ */
+
+.add-reminder-button {
+    width: 100%;
+    min-height: 42px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.add-reminder-button:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
+.add-reminder-button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.empty-reminders {
+    padding: 45px 20px;
+    text-align: center;
+    border: 1px dashed #dbe2ea;
+    border-radius: 10px;
+    background: #fbfcfe;
+}
+
+.empty-reminders > div {
+    font-size: 30px;
+}
+
+.empty-reminders h3 {
+    margin: 10px 0 5px;
+    color: #334155;
+    font-size: 14px;
+}
+
+.empty-reminders p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+
+/* ============================================================
+   REMINDER LIST
+   ============================================================ */
+
+.reminder-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.reminder-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 43px 1fr auto;
+    gap: 13px;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #e8edf2;
+    border-radius: 10px;
+    background: #fbfcfe;
+    transition: 0.2s ease;
+}
+
+.reminder-item:hover {
+    border-color: #dbeafe;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+}
+
+.medicine-icon {
+    width: 43px;
+    height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #eff6ff;
+    font-size: 18px;
+}
+
+.reminder-info h3 {
+    margin: 0 0 6px;
+    color: #1e293b;
+    font-size: 13px;
+}
+
+.reminder-time {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #64748b;
+    font-size: 10px;
+}
+
+.reminder-time strong {
+    color: #334155;
+}
+
+.reminder-meta {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-top: 7px;
+}
+
+
+/* ============================================================
+   STATUS
+   ============================================================ */
+
+.status-taken,
+.status-missed,
+.status-snoozed,
+.status-notified,
+.status-pending {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 750;
+}
+
+.status-taken {
+    background: #ecfdf3;
+    color: #15803d;
+}
+
+.status-missed {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.status-snoozed {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.status-notified {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.status-pending {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+
+/* ============================================================
+   REMINDER META INFORMATION
+   ============================================================ */
+
+.snooze-info {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #fff7ed;
+    color: #c2410c;
+    font-size: 8px;
+    font-weight: 650;
+}
+
+.repeat-info {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #f0fdf4;
+    color: #15803d;
+    font-size: 8px;
+    font-weight: 650;
+}
+
+.period-info {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 8px;
+    font-weight: 650;
+}
+
+
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+
+.reminder-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.reminder-actions button {
+    min-height: 34px;
+    padding: 0 10px;
+    border-radius: 7px;
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.reminder-actions button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+
+/* ============================================================
+   TAKEN
+   ============================================================ */
+
+.taken-button {
+    border: none;
+    background: #16a34a;
+    color: #ffffff;
+}
+
+.taken-button:hover:not(:disabled) {
+    background: #15803d;
+}
+
+
+/* ============================================================
+   MISSED
+   ============================================================ */
+
+.missed-button {
+    border: none;
+    background: #dc2626;
+    color: #ffffff;
+}
+
+.missed-button:hover:not(:disabled) {
+    background: #b91c1c;
+}
+
+
+/* ============================================================
+   SNOOZE
+   ============================================================ */
+
+.snooze-button {
+    border: none;
+    background: #f59e0b;
+    color: #ffffff;
+}
+
+.snooze-button:hover:not(:disabled) {
+    background: #d97706;
+}
+
+
+/* ============================================================
+   EMAIL
+   ============================================================ */
+
+.email-button {
+    border: none;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.email-button:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
+
+/* ============================================================
+   DELETE
+   ============================================================ */
+
+.delete-button {
+    border: 1px solid #fecaca;
+    background: #ffffff;
+    color: #dc2626;
+}
+
+.delete-button:hover:not(:disabled) {
+    background: #fef2f2;
+}
+
+
+/* ============================================================
+   SNOOZE PANEL
+   ============================================================ */
+
+.snooze-panel {
+    grid-column: 2 / 4;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin-top: 4px;
+    padding: 14px 15px;
+
+    border-top: 1px solid #e8edf2;
+    border-radius: 0 0 10px 10px;
+
+    background: #fffaf0;
+}
+
+.snooze-panel-title {
+    color: #92400e;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.snooze-controls {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+.snooze-controls label {
+    color: #64748b;
+    font-size: 9px;
+    font-weight: 650;
+}
+
+.snooze-controls select {
+    width: 140px;
+    min-height: 35px;
+    padding: 0 10px;
+
+    border: 1px solid #fed7aa;
+    border-radius: 7px;
+
+    outline: none;
+    background: #ffffff;
+    color: #334155;
+
+    font-size: 9px;
+}
+
+.snooze-controls select:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.10);
+}
+
+.confirm-snooze-button {
+    min-height: 35px;
+    padding: 0 13px;
+
+    border: none;
+    border-radius: 7px;
+
+    background: #f59e0b;
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.confirm-snooze-button:hover:not(:disabled) {
+    background: #d97706;
+}
+
+.confirm-snooze-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.cancel-snooze-button {
+    min-height: 35px;
+    padding: 0 13px;
+
+    border: 1px solid #dbe2ea;
+    border-radius: 7px;
+
+    background: #ffffff;
+    color: #64748b;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.cancel-snooze-button:hover {
+    background: #f8fafc;
+    color: #334155;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+    .reminder-main {
+        margin-left: 220px;
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .reminder-form {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .form-submit {
+        grid-column: 1 / -1;
+    }
+
+}
+
+
+@media (max-width: 850px) {
+
+    .reminder-main {
+        margin-left: 0;
+        padding: 85px 18px 30px;
+    }
+
+    .reminder-header {
+        flex-direction: column;
+    }
+
+    .reminder-item {
+        grid-template-columns: 43px 1fr;
+    }
+
+    .reminder-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+
+    .snooze-panel {
+        grid-column: 1 / -1;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .reminder-main {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .reminder-header h1 {
+        font-size: 25px;
+    }
+
+    .reminder-card {
+        padding: 16px;
+    }
+
+    .reminder-form {
+        grid-template-columns: 1fr;
+    }
+
+    .form-submit {
+        grid-column: auto;
+    }
+
+    .reminder-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+    .reminder-actions button {
+        width: 100%;
+    }
+
+    .snooze-panel {
+        align-items: stretch;
+    }
+
+    .snooze-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .snooze-controls select,
+    .confirm-snooze-button,
+    .cancel-snooze-button {
+        width: 100%;
+    }
+
+}

@@ -1,0 +1,1178 @@
+/* ============================================================
+   REFILL MANAGEMENT PAGE
+   ============================================================ */
+
+.refill-main {
+    margin-left: 250px;
+    padding: 100px 35px 50px;
+    min-height: 100vh;
+
+    background:
+        linear-gradient(
+            rgba(248, 251, 255, 0.94),
+            rgba(248, 251, 255, 0.97)
+        ),
+        url("/images/medical-bg.jpg");
+
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.refill-header {
+    width: 100%;
+    max-width: 1450px;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 25px;
+
+    margin: 0 auto 30px;
+}
+
+.section-label {
+    display: inline-block;
+
+    margin-bottom: 8px;
+
+    color: #2563eb;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 1.4px;
+}
+
+.refill-header h1 {
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 34px;
+    font-weight: 800;
+
+    line-height: 1.2;
+}
+
+.refill-header p {
+    margin: 9px 0 0;
+
+    color: #667085;
+
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   DASHBOARD BUTTON
+   ============================================================ */
+
+.dashboard-btn {
+    flex-shrink: 0;
+
+    padding: 11px 18px;
+
+    border: 1px solid #d9e1ec;
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: #344054;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.dashboard-btn:hover {
+    transform: translateY(-1px);
+
+    background: #f8fafc;
+
+    box-shadow:
+        0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+
+/* ============================================================
+   MESSAGES
+   ============================================================ */
+
+.success-message,
+.error-message {
+    width: 100%;
+    max-width: 1450px;
+
+    margin: 0 auto 22px;
+
+    padding: 14px 18px;
+
+    border-radius: 10px;
+
+    box-sizing: border-box;
+
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.success-message {
+    background: #ecfdf3;
+
+    border: 1px solid #abefc6;
+
+    color: #027a48;
+}
+
+.error-message {
+    background: #fef3f2;
+
+    border: 1px solid #fecdca;
+
+    color: #b42318;
+}
+
+
+/* ============================================================
+   SECTION
+   ============================================================ */
+
+.refill-section {
+    width: 100%;
+    max-width: 1450px;
+
+    margin: 0 auto 35px;
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 18px;
+}
+
+.section-heading h2 {
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 22px;
+    font-weight: 750;
+}
+
+.section-heading p {
+    margin: 5px 0 0;
+
+    color: #667085;
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   REFILL GRID
+   ============================================================ */
+
+.refill-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(320px, 1fr)
+        );
+
+    gap: 20px;
+
+    width: 100%;
+}
+
+
+/* ============================================================
+   REFILL CARD
+   ============================================================ */
+
+.refill-card {
+    min-width: 0;
+
+    padding: 22px;
+
+    border: 1px solid #e4eaf2;
+    border-radius: 18px;
+
+    background: rgba(255, 255, 255, 0.97);
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.06);
+
+    box-sizing: border-box;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.refill-card:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 15px 35px rgba(15, 23, 42, 0.10);
+}
+
+
+/* ============================================================
+   CARD TOP
+   ============================================================ */
+
+.refill-card-top {
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 20px;
+}
+
+.medicine-tag {
+    display: inline-block;
+
+    margin-bottom: 5px;
+
+    color: #667085;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1.2px;
+}
+
+.refill-card h3 {
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 20px;
+    font-weight: 750;
+
+    line-height: 1.3;
+
+    word-break: break-word;
+}
+
+
+/* ============================================================
+   STOCK BADGE
+   ============================================================ */
+
+.stock-badge {
+    flex-shrink: 0;
+
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.stock-badge.success {
+    background: #ecfdf3;
+    color: #027a48;
+}
+
+.stock-badge.warning {
+    background: #fffaeb;
+    color: #b54708;
+}
+
+.stock-badge.danger {
+    background: #fef3f2;
+    color: #b42318;
+}
+
+
+/* ============================================================
+   MEDICINE DETAILS
+   ============================================================ */
+
+.medicine-details {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+
+    margin-bottom: 16px;
+}
+
+.medicine-details > div {
+    min-width: 0;
+
+    padding: 11px 12px;
+
+    border: 1px solid #edf1f6;
+    border-radius: 10px;
+
+    background: #f8fafc;
+
+    box-sizing: border-box;
+}
+
+.medicine-details span {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #667085;
+
+    font-size: 11px;
+}
+
+.medicine-details strong {
+    display: block;
+
+    color: #344054;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    word-break: break-word;
+}
+
+
+/* ============================================================
+   PREDICTION GRID
+   ============================================================ */
+
+.prediction-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+}
+
+.prediction-item {
+    min-width: 0;
+
+    padding: 13px;
+
+    border: 1px solid #e6ebf2;
+    border-radius: 12px;
+
+    background: #ffffff;
+
+    box-sizing: border-box;
+}
+
+.prediction-item span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #667085;
+
+    font-size: 11px;
+
+    line-height: 1.4;
+}
+
+.prediction-item strong {
+    display: inline-block;
+
+    color: #172033;
+
+    font-size: 18px;
+    font-weight: 800;
+
+    word-break: break-word;
+}
+
+.prediction-item small {
+    margin-left: 4px;
+
+    color: #98a2b3;
+
+    font-size: 10px;
+}
+
+
+/* ============================================================
+   DEPLETION INFORMATION
+   ============================================================ */
+
+.depletion-info {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding: 13px 14px;
+
+    margin-bottom: 16px;
+
+    border: 1px solid #dbeafe;
+    border-radius: 11px;
+
+    background: #f5f9ff;
+
+    box-sizing: border-box;
+}
+
+.depletion-info span {
+    color: #667085;
+
+    font-size: 12px;
+}
+
+.depletion-info strong {
+    color: #2563eb;
+
+    font-size: 13px;
+
+    text-align: right;
+}
+
+
+/* ============================================================
+   PREDICTION LOADING
+   ============================================================ */
+
+.prediction-loading {
+    min-height: 70px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 15px 10px;
+
+    color: #667085;
+
+    font-size: 13px;
+
+    text-align: center;
+}
+
+
+/* ============================================================
+   REFILL BUTTON
+   ============================================================ */
+
+.refill-button {
+    width: 100%;
+
+    padding: 12px 16px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #2563eb;
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.refill-button:hover {
+    transform: translateY(-1px);
+
+    background: #1d4ed8;
+
+    box-shadow:
+        0 7px 18px rgba(37, 99, 235, 0.22);
+}
+
+.refill-button:active {
+    transform: translateY(0);
+}
+
+
+/* ============================================================
+   HISTORY TABLE
+   ============================================================ */
+
+.history-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+
+    border: 1px solid #e4eaf2;
+    border-radius: 16px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.05);
+
+    -webkit-overflow-scrolling: touch;
+}
+
+.history-table {
+    width: 100%;
+
+    min-width: 850px;
+
+    border-collapse: collapse;
+}
+
+.history-table th {
+    padding: 15px 16px;
+
+    border-bottom: 1px solid #e4eaf2;
+
+    background: #f8fafc;
+
+    color: #667085;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 0.6px;
+
+    text-align: left;
+    text-transform: uppercase;
+
+    white-space: nowrap;
+}
+
+.history-table td {
+    padding: 16px;
+
+    border-bottom: 1px solid #eef2f6;
+
+    color: #475467;
+
+    font-size: 13px;
+
+    vertical-align: middle;
+}
+
+.history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.history-table td strong {
+    color: #172033;
+}
+
+
+/* ============================================================
+   EMPTY STATES
+   ============================================================ */
+
+.empty-state,
+.empty-history {
+    padding: 40px;
+
+    border: 1px solid #e4eaf2;
+    border-radius: 16px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.05);
+
+    text-align: center;
+
+    box-sizing: border-box;
+}
+
+.empty-icon {
+    margin-bottom: 10px;
+
+    font-size: 38px;
+}
+
+.empty-state h3 {
+    margin: 0 0 7px;
+
+    color: #172033;
+
+    font-size: 18px;
+}
+
+.empty-state p {
+    margin: 0 0 20px;
+
+    color: #667085;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+}
+
+.empty-state button {
+    padding: 11px 18px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #2563eb;
+    color: #ffffff;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.empty-state button:hover {
+    background: #1d4ed8;
+
+    transform: translateY(-1px);
+}
+
+.empty-history {
+    color: #667085;
+
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+
+.refill-loading {
+    min-height: 70vh;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    color: #667085;
+
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 36px;
+    height: 36px;
+
+    margin-bottom: 15px;
+
+    border: 3px solid #dbeafe;
+    border-top-color: #2563eb;
+
+    border-radius: 50%;
+
+    animation:
+        refill-spin 0.8s linear infinite;
+}
+
+.refill-loading p {
+    margin: 0;
+
+    font-size: 14px;
+}
+
+@keyframes refill-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* ============================================================
+   MODAL OVERLAY
+   ============================================================ */
+
+.refill-modal-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(15, 23, 42, 0.48);
+
+    backdrop-filter: blur(4px);
+
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+.refill-modal {
+    width: 100%;
+    max-width: 500px;
+
+    max-height: calc(100vh - 40px);
+
+    overflow-y: auto;
+
+    padding: 25px;
+
+    border-radius: 18px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 25px 70px rgba(15, 23, 42, 0.22);
+
+    box-sizing: border-box;
+
+    animation:
+        modal-in 0.2s ease;
+}
+
+@keyframes modal-in {
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(10px)
+            scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+
+/* ============================================================
+   MODAL HEADER
+   ============================================================ */
+
+.modal-header {
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+.modal-header span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #2563eb;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1px;
+}
+
+.modal-header h2 {
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 22px;
+    font-weight: 800;
+
+    word-break: break-word;
+}
+
+.modal-close {
+    width: 34px;
+    height: 34px;
+
+    flex-shrink: 0;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #f2f4f7;
+    color: #667085;
+
+    font-size: 22px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease;
+}
+
+.modal-close:hover {
+    background: #e4e7ec;
+}
+
+
+/* ============================================================
+   MODAL FORM
+   ============================================================ */
+
+.refill-modal form {
+    display: flex;
+
+    flex-direction: column;
+}
+
+.refill-modal label {
+    margin-bottom: 7px;
+
+    color: #344054;
+
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.refill-modal input,
+.refill-modal textarea {
+    width: 100%;
+
+    padding: 12px 13px;
+
+    margin-bottom: 18px;
+
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+
+    outline: none;
+
+    background: #ffffff;
+    color: #172033;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    box-sizing: border-box;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.refill-modal input::placeholder,
+.refill-modal textarea::placeholder {
+    color: #98a2b3;
+}
+
+.refill-modal input:focus,
+.refill-modal textarea:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.10);
+}
+
+.refill-modal textarea {
+    min-height: 100px;
+
+    resize: vertical;
+}
+
+
+/* ============================================================
+   MODAL ACTIONS
+   ============================================================ */
+
+.modal-actions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 5px;
+}
+
+.cancel-button,
+.confirm-refill-button {
+    padding: 11px 17px;
+
+    border-radius: 9px;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.cancel-button {
+    border: 1px solid #d0d5dd;
+
+    background: #ffffff;
+    color: #344054;
+}
+
+.cancel-button:hover {
+    background: #f9fafb;
+}
+
+.confirm-refill-button {
+    border: 1px solid #2563eb;
+
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.confirm-refill-button:hover {
+    background: #1d4ed8;
+}
+
+.confirm-refill-button:disabled {
+    opacity: 0.65;
+
+    cursor: not-allowed;
+}
+
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+    .refill-main {
+        margin-left: 220px;
+
+        padding:
+            100px 25px 45px;
+    }
+
+    .refill-grid {
+        grid-template-columns:
+            repeat(
+                auto-fit,
+                minmax(290px, 1fr)
+            );
+    }
+
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+    .refill-main {
+        margin-left: 0;
+
+        padding:
+            85px 16px 35px;
+    }
+
+    .refill-header {
+        flex-direction: column;
+
+        gap: 18px;
+    }
+
+    .refill-header h1 {
+        font-size: 28px;
+    }
+
+    .refill-header p {
+        font-size: 14px;
+    }
+
+    .dashboard-btn {
+        width: 100%;
+    }
+
+    .refill-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .medicine-details {
+        grid-template-columns: 1fr;
+    }
+
+    .prediction-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .section-heading h2 {
+        font-size: 20px;
+    }
+
+    .history-table-wrapper {
+        border-radius: 12px;
+    }
+
+    .refill-modal-overlay {
+        align-items: center;
+
+        padding: 14px;
+    }
+
+    .refill-modal {
+        max-height:
+            calc(100vh - 28px);
+
+        padding: 21px;
+
+        border-radius: 15px;
+    }
+
+}
+
+
+/* ============================================================
+   SMALL MOBILE
+   ============================================================ */
+
+@media (max-width: 480px) {
+
+    .refill-main {
+        padding:
+            80px 12px 30px;
+    }
+
+    .refill-header h1 {
+        font-size: 25px;
+    }
+
+    .refill-header p {
+        font-size: 13px;
+    }
+
+    .refill-card {
+        padding: 17px;
+
+        border-radius: 15px;
+    }
+
+    .refill-card-top {
+        flex-direction: column;
+
+        gap: 10px;
+    }
+
+    .stock-badge {
+        align-self: flex-start;
+    }
+
+    .prediction-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .depletion-info {
+        flex-direction: column;
+
+        align-items: flex-start;
+    }
+
+    .depletion-info strong {
+        text-align: left;
+    }
+
+    .empty-state,
+    .empty-history {
+        padding: 30px 18px;
+    }
+
+    .refill-modal {
+        padding: 19px;
+
+        border-radius: 14px;
+    }
+
+    .modal-header {
+        gap: 12px;
+
+        margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+        font-size: 19px;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .cancel-button,
+    .confirm-refill-button {
+        width: 100%;
+    }
+
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .refill-card,
+    .dashboard-btn,
+    .refill-button,
+    .empty-state button,
+    .cancel-button,
+    .confirm-refill-button {
+        transition: none;
+    }
+
+    .loading-spinner {
+        animation: none;
+    }
+
+    .refill-modal {
+        animation: none;
+    }
+
+}

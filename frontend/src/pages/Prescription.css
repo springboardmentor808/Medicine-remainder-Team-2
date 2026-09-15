@@ -1,0 +1,779 @@
+/* ============================================================
+   PRESCRIPTION PAGE
+============================================================ */
+
+.prescription-page {
+    min-height: 100vh;
+    padding: 30px;
+    background: #f5f7fb;
+    box-sizing: border-box;
+}
+
+.prescription-card {
+    max-width: 1000px;
+    margin: auto;
+    background: white;
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   HEADER
+============================================================ */
+
+.prescription-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.prescription-header h1 {
+    margin: 0;
+    font-size: 30px;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.prescription-header p {
+    margin-top: 8px;
+    margin-bottom: 0;
+    color: #6b7280;
+    font-size: 15px;
+}
+
+.back-btn {
+    border: none;
+    padding: 11px 18px;
+    border-radius: 10px;
+    background: #eef2ff;
+    color: #3730a3;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.back-btn:hover {
+    background: #e0e7ff;
+    transform: translateY(-1px);
+}
+
+
+/* ============================================================
+   CAMERA / UPLOAD BOX
+============================================================ */
+
+.camera-box {
+    border: 2px dashed #cbd5e1;
+    border-radius: 16px;
+    padding: 60px 20px;
+    text-align: center;
+    background: #fafcff;
+    transition: 0.2s ease;
+}
+
+.camera-box:hover {
+    border-color: #93c5fd;
+    background: #f8fbff;
+}
+
+.camera-icon {
+    font-size: 55px;
+    line-height: 1;
+}
+
+.camera-box h2 {
+    margin: 15px 0 8px;
+    color: #1f2937;
+    font-size: 24px;
+}
+
+.camera-box p {
+    margin: 0 0 20px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   CAMERA PREVIEW
+============================================================ */
+
+.camera-preview-section {
+    width: 100%;
+    text-align: center;
+}
+
+.camera-preview-section h2 {
+    margin: 0 0 8px;
+    color: #1f2937;
+}
+
+.camera-preview-section p {
+    margin: 0 0 20px;
+    color: #6b7280;
+}
+
+.camera-preview {
+    width: 100%;
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 10px;
+    box-sizing: border-box;
+    background: #111827;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.camera-preview video {
+    display: block;
+    width: 100%;
+    max-height: 600px;
+    min-height: 300px;
+    object-fit: contain;
+    background: #000;
+    border-radius: 10px;
+}
+
+
+/* ============================================================
+   CAMERA ACTIONS
+============================================================ */
+
+.camera-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+
+.capture-btn,
+.ocr-btn,
+.medicine-btn,
+.change-btn,
+.clear-btn,
+.back-prescription-btn {
+    border: none;
+    padding: 13px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.capture-btn:hover,
+.ocr-btn:hover,
+.medicine-btn:hover,
+.change-btn:hover,
+.clear-btn:hover,
+.back-prescription-btn:hover {
+    transform: translateY(-1px);
+}
+
+
+/* ============================================================
+   CAPTURE BUTTON
+============================================================ */
+
+.capture-btn {
+    background: #2563eb;
+    color: white;
+}
+
+.capture-btn:hover {
+    background: #1d4ed8;
+}
+
+
+/* ============================================================
+   UPLOAD BUTTON
+============================================================ */
+
+.upload-btn {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #334155;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.upload-btn:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+
+/* ============================================================
+   OR TEXT
+============================================================ */
+
+.or-text {
+    margin: 15px 0 !important;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+
+/* ============================================================
+   CAMERA CLOSE BUTTON
+============================================================ */
+
+.camera-close-btn {
+    border: 1px solid #cbd5e1;
+    padding: 13px 22px;
+    border-radius: 10px;
+    background: white;
+    color: #374151;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.camera-close-btn:hover {
+    background: #f1f5f9;
+}
+
+
+/* ============================================================
+   PREVIEW
+============================================================ */
+
+.preview-section {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.preview-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.preview-title h2 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 21px;
+}
+
+.preview-title span {
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.prescription-preview {
+    display: block;
+    width: 100%;
+    max-width: 750px;
+    max-height: 650px;
+    margin: auto;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+}
+
+
+/* ============================================================
+   IMAGE ACTIONS
+============================================================ */
+
+.image-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+
+/* ============================================================
+   OCR BUTTON
+============================================================ */
+
+.ocr-btn {
+    background: #16a34a;
+    color: white;
+}
+
+.ocr-btn:hover {
+    background: #15803d;
+}
+
+
+/* ============================================================
+   HANDWRITTEN OCR BUTTON
+============================================================ */
+
+.handwritten-ocr-btn {
+    background: #7c3aed;
+    color: white;
+}
+
+.handwritten-ocr-btn:hover {
+    background: #6d28d9;
+}
+
+
+/* ============================================================
+   CHANGE IMAGE
+============================================================ */
+
+.change-btn {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.change-btn:hover {
+    background: #c7d2fe;
+}
+
+
+/* ============================================================
+   CLEAR
+============================================================ */
+
+.clear-btn {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.clear-btn:hover {
+    background: #fecaca;
+}
+
+
+/* ============================================================
+   DISABLED BUTTONS
+============================================================ */
+
+.capture-btn:disabled,
+.ocr-btn:disabled,
+.handwritten-ocr-btn:disabled,
+.change-btn:disabled,
+.clear-btn:disabled,
+.medicine-btn:disabled,
+.back-prescription-btn:disabled,
+.camera-close-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+
+/* ============================================================
+   OCR MESSAGE
+============================================================ */
+
+.ocr-message {
+    margin-top: 20px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.ocr-message.success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.ocr-message.warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.ocr-message.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+
+/* ============================================================
+   ERROR MESSAGE
+============================================================ */
+
+.error-message {
+    margin-top: 20px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   SUCCESS MESSAGE
+============================================================ */
+
+.success-message {
+    margin-top: 20px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   OCR RESULT
+============================================================ */
+
+.ocr-result {
+    margin-top: 25px;
+    padding: 22px;
+    border-radius: 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.result-header h2 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 21px;
+}
+
+.result-header p {
+    margin: 7px 0 0;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.result-header span {
+    font-size: 12px;
+    color: #64748b;
+    background: #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   OCR TEXTAREA
+============================================================ */
+
+.ocr-result textarea {
+    display: block;
+    width: 100%;
+    min-height: 220px;
+    margin-top: 18px;
+    padding: 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    resize: vertical;
+    font-size: 15px;
+    line-height: 1.6;
+    box-sizing: border-box;
+    background: white;
+    color: #1f2937;
+    font-family: inherit;
+    outline: none;
+}
+
+.ocr-result textarea:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+
+/* ============================================================
+   VERIFICATION WARNING
+============================================================ */
+
+.verification-box {
+    margin-top: 15px;
+    padding: 15px 17px;
+    border-radius: 10px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+}
+
+.verification-box strong {
+    color: #9a3412;
+    font-size: 14px;
+}
+
+.verification-box p {
+    margin: 7px 0 0;
+    color: #9a3412;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+
+/* ============================================================
+   RESULT ACTIONS
+============================================================ */
+
+.result-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+
+/* ============================================================
+   ADD MEDICINE BUTTON
+============================================================ */
+
+.medicine-btn {
+    background: #7c3aed;
+    color: white;
+}
+
+.medicine-btn:hover {
+    background: #6d28d9;
+}
+
+
+/* ============================================================
+   BACK TO PRESCRIPTION
+============================================================ */
+
+.back-prescription-btn {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.back-prescription-btn:hover {
+    background: #cbd5e1;
+}
+
+
+/* ============================================================
+   CAMERA LOADING
+============================================================ */
+
+.camera-loading {
+    margin-top: 15px;
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+/* ============================================================
+   CAMERA ERROR
+============================================================ */
+
+.camera-error {
+    margin-top: 15px;
+    padding: 12px 15px;
+    border-radius: 10px;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   HIDDEN CANVAS
+============================================================ */
+
+.prescription-canvas {
+    display: none;
+}
+
+
+/* ============================================================
+   FILE INPUT
+============================================================ */
+
+.prescription-file-input {
+    display: none;
+}
+
+
+/* ============================================================
+   LOADING TEXT
+============================================================ */
+
+.loading-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 700px) {
+
+    .prescription-page {
+        padding: 15px;
+    }
+
+    .prescription-card {
+        padding: 20px;
+        border-radius: 14px;
+    }
+
+    .prescription-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .prescription-header h1 {
+        font-size: 25px;
+    }
+
+    .back-btn {
+        width: 100%;
+    }
+
+    .camera-box {
+        padding: 45px 15px;
+    }
+
+    .camera-icon {
+        font-size: 48px;
+    }
+
+    .camera-box h2 {
+        font-size: 21px;
+    }
+
+    .camera-preview {
+        padding: 6px;
+        border-radius: 12px;
+    }
+
+    .camera-preview video {
+        min-height: 250px;
+        max-height: 450px;
+    }
+
+    .camera-actions {
+        flex-direction: column;
+    }
+
+    .camera-actions button {
+        width: 100%;
+    }
+
+    .image-actions {
+        flex-direction: column;
+    }
+
+    .image-actions button,
+    .image-actions .upload-btn {
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+    }
+
+    .preview-title {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .preview-title span {
+        max-width: 100%;
+    }
+
+    .result-header {
+        flex-direction: column;
+    }
+
+    .result-header span {
+        align-self: flex-start;
+    }
+
+    .result-actions {
+        flex-direction: column;
+    }
+
+    .result-actions button {
+        width: 100%;
+    }
+}
+
+
+/* ============================================================
+   VERY SMALL SCREENS
+============================================================ */
+
+@media (max-width: 420px) {
+
+    .prescription-page {
+        padding: 10px;
+    }
+
+    .prescription-card {
+        padding: 15px;
+    }
+
+    .prescription-header h1 {
+        font-size: 22px;
+    }
+
+    .camera-box {
+        padding: 35px 12px;
+    }
+
+    .camera-preview video {
+        min-height: 220px;
+    }
+
+    .capture-btn,
+    .ocr-btn,
+    .medicine-btn,
+    .change-btn,
+    .clear-btn,
+    .back-prescription-btn,
+    .camera-close-btn {
+        width: 100%;
+    }
+}

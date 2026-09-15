@@ -1,0 +1,557 @@
+/* ============================================================
+   MEDICINE DETAILS PAGE
+   ============================================================ */
+
+.medicine-details-page {
+    min-height: 100vh;
+    margin-left: 250px;
+    padding: 35px 40px 60px;
+
+    background: #f5f7fb !important;
+    color: #172033;
+
+    font-family: Arial, Helvetica, sans-serif;
+
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+
+.details-topbar {
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 10px 16px;
+
+    border: 1px solid #d9e0e8;
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #344054;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+
+.back-btn:hover {
+    background: #eef5ff;
+    color: #2563eb;
+
+    transform: translateX(-2px);
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.details-header {
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+
+    margin-bottom: 25px;
+}
+
+
+.details-main-icon {
+    width: 68px;
+    height: 68px;
+
+    min-width: 68px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 17px;
+
+    background: #e9f2ff;
+    border: 1px solid #d6e7ff;
+
+    font-size: 34px;
+}
+
+
+.details-heading {
+    min-width: 0;
+}
+
+
+.details-heading h1 {
+    margin: 0 0 6px;
+
+    color: #172033;
+
+    font-size: 30px;
+    font-weight: 700;
+
+    line-height: 1.2;
+}
+
+
+.details-heading p {
+    margin: 0;
+
+    color: #667085;
+
+    font-size: 15px;
+}
+
+
+/* ============================================================
+   MAIN CARD
+   ============================================================ */
+
+.details-card {
+    width: 100%;
+    max-width: 1050px;
+
+    background: #ffffff;
+
+    border: 1px solid #e1e7ef;
+
+    border-radius: 18px;
+
+    padding: 28px;
+
+    box-sizing: border-box;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.06);
+}
+
+
+/* ============================================================
+   CARD HEADER
+   ============================================================ */
+
+.details-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+
+    border-bottom: 1px solid #edf0f4;
+}
+
+
+.details-card-title h2 {
+    margin: 0 0 5px;
+
+    color: #172033;
+
+    font-size: 20px;
+    font-weight: 700;
+}
+
+
+.details-card-title p {
+    margin: 0;
+
+    color: #8a94a3;
+
+    font-size: 13px;
+}
+
+
+.details-card-title > span {
+    flex-shrink: 0;
+
+    padding: 7px 12px;
+
+    border-radius: 20px;
+
+    background: #f2f4f7;
+
+    color: #667085;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* ============================================================
+   DETAILS GRID
+   ============================================================ */
+
+.details-grid {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+
+/* ============================================================
+   DETAIL ITEM
+   ============================================================ */
+
+.detail-item {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    min-height: 72px;
+
+    padding: 13px;
+
+    background: #fafbfd;
+
+    border: 1px solid #edf0f4;
+
+    border-radius: 12px;
+
+    box-sizing: border-box;
+
+    transition: all 0.2s ease;
+}
+
+
+.detail-item:hover {
+    background: #f7faff;
+
+    border-color: #dbe5f1;
+
+    transform: translateY(-1px);
+}
+
+
+/* ============================================================
+   DETAIL ICONS
+   ============================================================ */
+
+.detail-icon {
+    width: 44px;
+    height: 44px;
+
+    min-width: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    font-size: 20px;
+
+    line-height: 1;
+}
+
+
+.detail-icon.quantity {
+    background: #fff5df;
+}
+
+
+.detail-icon.frequency {
+    background: #eaf4ff;
+}
+
+
+.detail-icon.date {
+    background: #f0edff;
+}
+
+
+.detail-icon.reminder {
+    background: #fff0e7;
+}
+
+
+.detail-icon.status {
+    background: #eafbf2;
+}
+
+
+.detail-icon.condition {
+    background: #eafaf5;
+}
+
+
+.detail-icon.created {
+    background: #f2f4f7;
+}
+
+
+/* ============================================================
+   DETAIL TEXT
+   ============================================================ */
+
+.detail-text {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+
+.detail-text span {
+    color: #8a94a3;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.35px;
+}
+
+
+.detail-text strong {
+    display: block;
+
+    color: #344054;
+
+    font-size: 14px;
+
+    font-weight: 650;
+
+    line-height: 1.4;
+
+    overflow-wrap: anywhere;
+}
+
+
+.enabled-text {
+    color: #15803d !important;
+}
+
+
+.disabled-text {
+    color: #dc2626 !important;
+}
+
+
+/* ============================================================
+   ACTION BUTTONS
+   ============================================================ */
+
+.details-actions {
+    display: flex;
+
+    gap: 12px;
+
+    margin-top: 28px;
+
+    padding-top: 22px;
+
+    border-top: 1px solid #edf0f4;
+}
+
+
+.edit-medicine-btn,
+.back-list-btn {
+    min-height: 44px;
+
+    padding: 0 18px;
+
+    border-radius: 9px;
+
+    font-size: 14px;
+
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+
+.edit-medicine-btn {
+    border: none;
+
+    background: #2563eb;
+
+    color: #ffffff;
+}
+
+
+.edit-medicine-btn:hover {
+    background: #1d4ed8;
+
+    transform: translateY(-2px);
+}
+
+
+.back-list-btn {
+    border: 1px solid #d9e0e8;
+
+    background: #ffffff;
+
+    color: #475467;
+}
+
+
+.back-list-btn:hover {
+    background: #f3f6fa;
+
+    color: #2563eb;
+
+    transform: translateY(-2px);
+}
+
+
+/* ============================================================
+   LOADING / ERROR MESSAGE
+   ============================================================ */
+
+.details-message {
+    width: min(600px, 100%);
+
+    margin: 80px auto;
+
+    padding: 45px 30px;
+
+    box-sizing: border-box;
+
+    text-align: center;
+
+    background: #ffffff;
+
+    border: 1px solid #e1e7ef;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.06);
+}
+
+
+.details-message-icon {
+    margin-bottom: 12px;
+
+    font-size: 42px;
+}
+
+
+.details-message h2 {
+    margin: 0 0 8px;
+
+    color: #172033;
+
+    font-size: 22px;
+}
+
+
+.details-message p {
+    margin: 0 0 20px;
+
+    color: #7b8494;
+
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1000px) {
+
+    .medicine-details-page {
+        margin-left: 220px;
+
+        padding: 30px 25px 50px;
+    }
+
+}
+
+
+@media (max-width: 800px) {
+
+    .medicine-details-page {
+        margin-left: 0;
+
+        padding: 28px 20px 50px;
+    }
+
+
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .medicine-details-page {
+        padding: 22px 14px 40px;
+    }
+
+
+    .details-header {
+        gap: 12px;
+    }
+
+
+    .details-main-icon {
+        width: 56px;
+        height: 56px;
+        min-width: 56px;
+
+        font-size: 28px;
+    }
+
+
+    .details-heading h1 {
+        font-size: 24px;
+    }
+
+
+    .details-heading p {
+        font-size: 13px;
+    }
+
+
+    .details-card {
+        padding: 20px 16px;
+    }
+
+
+    .details-card-title {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+
+    .details-actions {
+        flex-direction: column;
+    }
+
+
+    .edit-medicine-btn,
+    .back-list-btn {
+        width: 100%;
+    }
+
+}

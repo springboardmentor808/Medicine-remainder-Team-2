@@ -1,0 +1,775 @@
+/* ============================================================
+   PILLSYNC MEDICINE OCR
+============================================================ */
+
+.ocr-main {
+    min-height: 100vh;
+    margin-left: 250px;
+    padding: 100px 34px 45px;
+    background: #f6f8fb;
+}
+
+.ocr-container {
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+
+/* ============================================================
+   HEADER
+============================================================ */
+
+.ocr-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 25px;
+    margin-bottom: 28px;
+}
+
+.ocr-eyebrow,
+.result-eyebrow {
+    margin-bottom: 8px;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 1.4px;
+}
+
+.ocr-header h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 32px;
+    font-weight: 750;
+    letter-spacing: -0.7px;
+}
+
+.ocr-header p {
+    max-width: 700px;
+    margin: 9px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.ocr-back-button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #475569;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.ocr-back-button:hover {
+    color: #2563eb;
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+
+/* ============================================================
+   MAIN OCR CARD
+============================================================ */
+
+.ocr-card,
+.result-card {
+    background: #ffffff;
+    border: 1px solid #e5eaf0;
+    border-radius: 15px;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+
+.ocr-card {
+    padding: 24px;
+}
+
+.ocr-card-header {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.ocr-title-icon {
+    width: 43px;
+    height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #eff6ff;
+    font-size: 19px;
+}
+
+.ocr-card-header h2 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 17px;
+}
+
+.ocr-card-header p {
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+
+/* ============================================================
+   ACTION CARDS
+============================================================ */
+
+.ocr-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 23px;
+}
+
+.ocr-action-card {
+    min-height: 170px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 25px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #fbfcfe;
+    color: #334155;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.ocr-action-card:hover:not(:disabled) {
+    border-color: #93c5fd;
+    background: #f8fbff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.ocr-action-card:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ocr-action-icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    background: #eff6ff;
+    font-size: 23px;
+}
+
+.ocr-action-card strong {
+    color: #1e293b;
+    font-size: 13px;
+}
+
+.ocr-action-card > span:last-child {
+    margin-top: 5px;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+
+/* ============================================================
+   CAMERA
+============================================================ */
+
+.camera-area {
+    margin-top: 23px;
+}
+
+.camera-header,
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 13px;
+}
+
+.camera-header h3,
+.preview-header h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.camera-header p,
+.preview-header p {
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.camera-live {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #fef2f2;
+    color: #dc2626;
+    font-size: 9px;
+    font-weight: 750;
+}
+
+.camera-preview {
+    position: relative;
+    width: 100%;
+    max-width: 850px;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+}
+
+.camera-preview video {
+    display: block;
+    width: 100%;
+    max-height: 570px;
+    min-height: 320px;
+    object-fit: contain;
+    background: #0f172a;
+}
+
+.camera-frame {
+    position: absolute;
+    inset: 12%;
+    border: 2px solid rgba(255, 255, 255, 0.75);
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+.camera-frame span::before,
+.camera-frame span::after {
+    content: "";
+    position: absolute;
+    width: 25px;
+    height: 25px;
+}
+
+.camera-frame span::before {
+    top: -2px;
+    left: -2px;
+    border-top: 4px solid #60a5fa;
+    border-left: 4px solid #60a5fa;
+    border-radius: 8px 0 0 0;
+}
+
+.camera-frame span::after {
+    right: -2px;
+    bottom: -2px;
+    border-right: 4px solid #60a5fa;
+    border-bottom: 4px solid #60a5fa;
+    border-radius: 0 0 8px 0;
+}
+
+.camera-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.capture-button,
+.close-camera-button {
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.capture-button {
+    border: none;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.capture-button:hover {
+    background: #1d4ed8;
+}
+
+.close-camera-button {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+}
+
+.close-camera-button:hover {
+    background: #f8fafc;
+}
+
+
+/* ============================================================
+   IMAGE PREVIEW
+============================================================ */
+
+.preview-area {
+    margin-top: 23px;
+}
+
+.preview-header > span {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #ecfdf3;
+    color: #15803d;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.image-preview-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    padding: 15px;
+    border: 1px solid #e5eaf0;
+    border-radius: 11px;
+    background: #f8fafc;
+}
+
+.image-preview-box img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 470px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+
+/* ============================================================
+   ERROR
+============================================================ */
+
+.ocr-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin-top: 18px;
+    padding: 13px;
+    border: 1px solid #fecaca;
+    border-radius: 9px;
+    background: #fef2f2;
+}
+
+.ocr-error > span {
+    font-size: 17px;
+}
+
+.ocr-error strong {
+    color: #991b1b;
+    font-size: 11px;
+}
+
+.ocr-error p {
+    margin: 3px 0 0;
+    color: #b91c1c;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   SCAN ACTIONS
+============================================================ */
+
+.scan-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.scan-button,
+.secondary-button {
+    min-height: 43px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.scan-button {
+    border: none;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.scan-button:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
+.scan-button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.secondary-button {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+}
+
+.secondary-button:hover:not(:disabled) {
+    background: #f8fafc;
+}
+
+
+/* ============================================================
+   RESULT CARD
+============================================================ */
+
+.result-card {
+    margin-top: 24px;
+    padding: 24px;
+}
+
+.result-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.result-header h2 {
+    margin: 0;
+    color: #111827;
+    font-size: 20px;
+}
+
+.result-header p {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 11px;
+}
+
+.result-success {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #ecfdf3;
+    color: #15803d;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   MEDICINE RESULT
+============================================================ */
+
+.medicine-result {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #e5eaf0;
+    border-radius: 11px;
+    background: #fbfcfe;
+}
+
+.medicine-result-title {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+}
+
+.medicine-result-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: #eff6ff;
+    font-size: 18px;
+}
+
+.medicine-result-title h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.medicine-result-title span {
+    display: block;
+    margin-top: 3px;
+    color: #94a3b8;
+    font-size: 9px;
+}
+
+
+/* ============================================================
+   EDITABLE MEDICINE FIELDS
+============================================================ */
+
+.medicine-fields {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 13px;
+}
+
+.result-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 13px;
+    border: 1px solid #e5eaf0;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.result-field label {
+    display: block;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.result-field input {
+    width: 100%;
+    min-height: 40px;
+    box-sizing: border-box;
+    padding: 9px 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #1e293b;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.result-field input:hover {
+    border-color: #94a3b8;
+}
+
+.result-field input:focus {
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+}
+
+.result-field input::placeholder {
+    color: #94a3b8;
+}
+
+
+/* ============================================================
+   VERIFICATION WARNING
+============================================================ */
+
+.verification-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    background: #fffbeb;
+}
+
+.verification-warning > span {
+    font-size: 16px;
+}
+
+.verification-warning strong {
+    color: #92400e;
+    font-size: 10px;
+}
+
+.verification-warning p {
+    margin: 3px 0 0;
+    color: #92400e;
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   USE MEDICINE BUTTON
+============================================================ */
+
+.use-medicine-button {
+    width: 100%;
+    min-height: 43px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 8px;
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.use-medicine-button:hover {
+    background: #15803d;
+    transform: translateY(-1px);
+}
+
+
+/* ============================================================
+   RAW OCR TEXT
+============================================================ */
+
+.raw-text-section {
+    margin-top: 23px;
+}
+
+.raw-text-header h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.raw-text-header p {
+    margin: 4px 0 10px;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.raw-text-section pre {
+    max-height: 300px;
+    overflow: auto;
+    margin: 0;
+    padding: 15px;
+    border: 1px solid #e5eaf0;
+    border-radius: 9px;
+    background: #f8fafc;
+    color: #475569;
+    font-family: Consolas, monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+
+/* ============================================================
+   NEW SCAN
+============================================================ */
+
+.new-scan-button {
+    min-height: 40px;
+    margin-top: 15px;
+    padding: 0 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 10px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.new-scan-button:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 1100px) {
+
+    .ocr-main {
+        margin-left: 220px;
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+}
+
+
+@media (max-width: 800px) {
+
+    .ocr-main {
+        margin-left: 0;
+        padding: 85px 16px 30px;
+    }
+
+    .ocr-header {
+        flex-direction: column;
+    }
+
+    .ocr-back-button {
+        align-self: flex-start;
+    }
+
+    .ocr-action-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .camera-preview video {
+        min-height: 250px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .ocr-main {
+        padding: 76px 12px 25px;
+    }
+
+    .ocr-header h1 {
+        font-size: 26px;
+    }
+
+    .ocr-card,
+    .result-card {
+        padding: 16px;
+    }
+
+    .medicine-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .camera-controls,
+    .scan-actions {
+        flex-direction: column;
+    }
+
+    .capture-button,
+    .close-camera-button,
+    .scan-button,
+    .secondary-button {
+        width: 100%;
+    }
+
+    .result-header {
+        flex-direction: column;
+    }
+
+}

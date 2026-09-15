@@ -1,0 +1,555 @@
+/* ============================================================
+   PILLSYNC - ADD MEDICINE PAGE
+   ============================================================ */
+
+
+/* ============================================================
+   PAGE
+   ============================================================ */
+
+.add-page {
+    margin-left: 220px;
+    margin-top: 70px;
+    min-height: calc(100vh - 70px);
+    padding: 30px;
+    box-sizing: border-box;
+
+    background:
+        linear-gradient(
+            rgba(0, 40, 80, 0.60),
+            rgba(0, 40, 80, 0.60)
+        ),
+        url("/images/medical-bg.jpg");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+
+/* ============================================================
+   CARD
+   ============================================================ */
+
+.add-card {
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+
+    background: rgba(
+        255,
+        255,
+        255,
+        0.97
+    );
+
+    padding: 30px;
+    box-sizing: border-box;
+
+    border-radius: 15px;
+
+    box-shadow:
+        0 10px 25px
+        rgba(0, 0, 0, 0.25);
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.add-header {
+    margin-bottom: 20px;
+}
+
+
+.add-label {
+    display: block;
+    text-align: center;
+
+    color: #607d8b;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 1.2px;
+
+    margin-bottom: 5px;
+}
+
+
+/* ============================================================
+   TITLE
+   ============================================================ */
+
+.add-title {
+    text-align: center;
+
+    color: #1976d2;
+
+    margin: 0 0 10px 0;
+
+    font-size: 32px;
+    font-weight: 700;
+}
+
+
+.add-header p {
+    text-align: center;
+
+    color: #607d8b;
+
+    font-size: 14px;
+
+    margin: 0 auto;
+
+    line-height: 1.5;
+
+    max-width: 520px;
+}
+
+
+/* ============================================================
+   FORM
+   ============================================================ */
+
+.add-card form {
+    width: 100%;
+}
+
+
+/* ============================================================
+   FORM GROUP
+   ============================================================ */
+
+.form-group {
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+
+/* ============================================================
+   LABEL
+   ============================================================ */
+
+.form-group label {
+    display: block;
+
+    font-weight: 700;
+
+    margin-bottom: 8px;
+
+    color: #333;
+
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   INPUT / SELECT
+   ============================================================ */
+
+.form-input {
+    width: 100%;
+
+    min-height: 46px;
+
+    padding: 12px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #ccc;
+
+    border-radius: 8px;
+
+    background: #fff;
+
+    color: #333;
+
+    font-size: 16px;
+
+    font-family: inherit;
+
+    outline: none;
+
+    transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease,
+        background 0.3s ease;
+}
+
+
+/* ============================================================
+   INPUT FOCUS
+   ============================================================ */
+
+.form-input:focus {
+    border-color: #1976d2;
+
+    box-shadow:
+        0 0 8px
+        rgba(25, 118, 210, 0.30);
+
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   DISABLED INPUT
+   ============================================================ */
+
+.form-input:disabled {
+    background: #f3f5f7;
+
+    color: #8a8a8a;
+
+    cursor: not-allowed;
+
+    opacity: 0.8;
+}
+
+
+/* ============================================================
+   SELECT
+   ============================================================ */
+
+select.form-input {
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   DATE / TIME INPUT
+   ============================================================ */
+
+input[type="date"].form-input,
+input[type="time"].form-input {
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   NUMBER INPUT
+   ============================================================ */
+
+input[type="number"].form-input {
+    appearance: textfield;
+}
+
+
+/* Chrome / Edge */
+
+input[type="number"].form-input::-webkit-inner-spin-button,
+input[type="number"].form-input::-webkit-outer-spin-button {
+    opacity: 1;
+}
+
+
+/* ============================================================
+   PLACEHOLDER
+   ============================================================ */
+
+.form-input::placeholder {
+    color: #9aa6ad;
+
+    opacity: 1;
+}
+
+
+/* ============================================================
+   CHECKBOX
+   ============================================================ */
+
+.checkbox-group {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin: 20px 0;
+
+    padding: 12px;
+
+    background: #f5f9fc;
+
+    border: 1px solid #e1edf5;
+
+    border-radius: 8px;
+}
+
+
+.checkbox-group input {
+    width: 18px;
+
+    height: 18px;
+
+    margin: 0;
+
+    cursor: pointer;
+
+    accent-color: #1976d2;
+}
+
+
+.checkbox-group label {
+    margin: 0;
+
+    color: #333;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   SUBMIT BUTTON
+   ============================================================ */
+
+.submit-btn {
+    width: 100%;
+
+    min-height: 48px;
+
+    padding: 14px;
+
+    background: #1976d2;
+
+    color: white;
+
+    border: none;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 17px;
+
+    font-weight: 700;
+
+    font-family: inherit;
+
+    transition:
+        background 0.3s ease,
+        transform 0.2s ease,
+        box-shadow 0.3s ease;
+}
+
+
+/* ============================================================
+   SUBMIT HOVER
+   ============================================================ */
+
+.submit-btn:hover {
+    background: #0d47a1;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 5px 12px
+        rgba(13, 71, 161, 0.25);
+}
+
+
+/* ============================================================
+   SUBMIT ACTIVE
+   ============================================================ */
+
+.submit-btn:active {
+    transform: scale(0.98);
+
+    box-shadow: none;
+}
+
+
+/* ============================================================
+   SUBMIT DISABLED
+   ============================================================ */
+
+.submit-btn:disabled {
+    background: #90caf9;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+
+    opacity: 0.8;
+}
+
+
+/* ============================================================
+   OCR NOTICE
+   ============================================================ */
+
+.ocr-notice {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   SMALL TEXT
+   ============================================================ */
+
+.form-group small {
+    line-height: 1.4;
+}
+
+
+/* ============================================================
+   ERROR / VALIDATION
+   ============================================================ */
+
+.form-input:invalid {
+    box-shadow: none;
+}
+
+
+/* ============================================================
+   MOBILE - 900px
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+    .add-page {
+        margin-left: 0;
+
+        padding: 25px;
+
+        background-attachment: scroll;
+    }
+
+
+    .add-card {
+        max-width: 650px;
+    }
+}
+
+
+/* ============================================================
+   MOBILE - 700px
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    .add-page {
+        margin-top: 60px;
+
+        padding: 18px;
+    }
+
+
+    .add-card {
+        padding: 22px;
+
+        border-radius: 12px;
+    }
+
+
+    .add-title {
+        font-size: 27px;
+    }
+
+
+    .add-header p {
+        font-size: 13px;
+    }
+
+
+    .form-input {
+        min-height: 44px;
+
+        font-size: 15px;
+
+        padding: 11px;
+    }
+
+
+    .submit-btn {
+        font-size: 16px;
+
+        padding: 13px;
+    }
+}
+
+
+/* ============================================================
+   SMALL MOBILE - 480px
+   ============================================================ */
+
+@media (max-width: 480px) {
+
+    .add-page {
+        padding: 12px;
+
+        margin-top: 55px;
+    }
+
+
+    .add-card {
+        padding: 18px;
+
+        border-radius: 10px;
+    }
+
+
+    .add-title {
+        font-size: 24px;
+    }
+
+
+    .add-label {
+        font-size: 10px;
+
+        letter-spacing: 1px;
+    }
+
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+
+    .form-group label {
+        font-size: 13px;
+    }
+
+
+    .form-input {
+        font-size: 14px;
+
+        min-height: 42px;
+
+        padding: 10px;
+    }
+
+
+    .checkbox-group {
+        padding: 10px;
+
+        margin: 15px 0;
+    }
+
+
+    .checkbox-group label {
+        font-size: 13px;
+    }
+
+
+    .submit-btn {
+        font-size: 15px;
+
+        min-height: 44px;
+
+        padding: 12px;
+    }
+}

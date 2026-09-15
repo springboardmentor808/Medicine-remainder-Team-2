@@ -28,3 +28,8 @@ Thumbs.db
 .idea/
 .vite/
 **/.vite/
+
+backend/db.sqlite3
+backend/**/__pycache__/
+*.pyc
+backend/.env
