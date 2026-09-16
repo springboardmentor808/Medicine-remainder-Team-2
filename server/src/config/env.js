@@ -1,4 +1,20 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'node:path';
+import fs from 'node:fs';
+
+// Try loading .env from current directory, server/.env, or workspace root
+const candidatePaths = [
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), 'server', '.env'),
+  path.resolve(process.cwd(), '..', '.env'),
+  path.resolve(process.cwd(), '..', 'server', '.env'),
+];
+for (const p of candidatePaths) {
+  if (fs.existsSync(p)) {
+    dotenv.config({ path: p });
+  }
+}
+dotenv.config(); // default fallback
 
 export const port = Number(process.env.PORT || 4000);
 export const accessSecret = process.env.JWT_ACCESS_SECRET || 'local-access-secret-change-me';

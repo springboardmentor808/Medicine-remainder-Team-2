@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const conditionEnum = ['Blood Pressure', 'Diabetes', 'Thyroid', 'Antibiotics', 'Vitamins', 'Heart'];
+const conditionEnum = ['Blood Pressure', 'Diabetes', 'Thyroid', 'Antibiotics', 'Vitamins', 'Heart', 'Heart Medications', 'Other'];
 
 const medicineSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },

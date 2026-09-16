@@ -5,6 +5,7 @@ import { clientOrigin } from './config/env.js';
 import authRoutes from './routes/auth.js';
 import patientRoutes from './routes/patient.js';
 import caregiverRoutes from './routes/caregiver.js';
+import reminderRoutes from './routes/reminders.js';
 import User from './models/User.js';
 import CaregiverLink from './models/CaregiverLink.js';
 import { requireAuth, requireRole } from './middleware/auth.js';
@@ -16,12 +17,14 @@ const app = express();
 
 app.use(cors({ origin: clientOrigin, credentials: true }));
 app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: false })); // Twilio inbound webhook support
 app.use(cookieParser());
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'pillsync-server' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/patient', patientRoutes);
 app.use('/api/caregiver', caregiverRoutes);
+app.use('/api/reminders', reminderRoutes);
 // Legacy compatibility: POST /api/link used by existing clients (App.jsx calls /link)
 app.post('/api/link', requireAuth, requireRole('caregiver'), async (req, res) => {
   const patient = await User.findOne({ linkCode: req.body.linkCode?.trim().toUpperCase(), role: 'patient' });

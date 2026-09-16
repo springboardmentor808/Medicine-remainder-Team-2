@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema({
   linkCode: { type: String, unique: true, sparse: true },
   linkedPatients: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   conditions: [{ type: String, trim: true }],
+  age: { type: Number, min: 0, max: 130 },
+  gender: { type: String, trim: true, maxlength: 30 },
   emergencyContacts: [{
     name: { type: String, trim: true, maxlength: 80 },
     phone: { type: String, trim: true, maxlength: 20 },

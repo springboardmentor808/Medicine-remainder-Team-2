@@ -1,2 +1,5 @@
-// /patient/refill — Refill Tracker (design 2.5) — modular stub
+// /patient/refill — Refill Tracker & Depletion Forecasting
+import PatientAnalyticsDashboard from '../../components/patient/PatientAnalyticsDashboard.jsx';
+
 export const PATIENT_REFILL_ROUTE = '/patient/refill';
+export default PatientAnalyticsDashboard;

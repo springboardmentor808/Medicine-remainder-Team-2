@@ -1,2 +1,5 @@
-// /patient/adherence — Adherence Analytics (design 2.4) — modular stub
+// /patient/adherence — Patient Analytics & Consistency Tracking
+import PatientAnalyticsDashboard from '../../components/patient/PatientAnalyticsDashboard.jsx';
+
 export const PATIENT_ADHERENCE_ROUTE = '/patient/adherence';
+export default PatientAnalyticsDashboard;

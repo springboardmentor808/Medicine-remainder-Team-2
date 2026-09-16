@@ -11,6 +11,7 @@ import { emitToCaregiver, emitToPatient } from '../socket.js';
 import { deliverNotification } from '../utils/delivery.js';
 import { toISTDateString, istDayRange, istDateNDaysAgo } from '../utils/time.js';
 import { rateLimit } from '../middleware/rateLimit.js';
+import { sendTwilioSMS } from '../services/dispatchService.js';
 
 const router = express.Router();
 
@@ -194,6 +195,18 @@ router.post('/patients/:patientId/nudge', requireAuth, requireRole('caregiver'),
   await deliverNotification(patient, patientNotif);
   emitToPatient(patient._id, 'alert', patientNotif);
   emitToPatient(patient._id, 'nudge', patientNotif);
+
+  // Send direct SMS nudge via Twilio if patient has phone number
+  if (patient.phone) {
+    const nextMed = await Medicine.findOne({ patientId: patient._id }).lean();
+    await sendTwilioSMS({
+      to: patient.phone,
+      patientName: patient.name,
+      medicineName: nextMed?.name || 'your medicine',
+      dose: nextMed?.dose || 'scheduled dose',
+    }).catch(err => console.error('Caregiver nudge SMS failed:', err.message));
+  }
+
   const caregiverNotif = await Notification.create({
     recipientId: caregiverUser._id, type: 'nudge', title: 'Reminder sent',
     message: `You nudged ${patient.name}.`,
@@ -203,16 +216,177 @@ router.post('/patients/:patientId/nudge', requireAuth, requireRole('caregiver'),
   res.json({ ok: true, nudge: patientNotif });
 });
 
-// Alerts feed with filter chips: All/Missed/LowStock/medicine_added
+// Deep-Dive Analytics for a linked patient: missed dosage pattern analysis, slot breakdown, consistency
+router.get('/patients/:patientId/deep-dive', requireAuth, requireRole('caregiver'), async (req, res) => {
+  const link = await CaregiverLink.findOne({ patientId: req.params.patientId, caregiverId: req.auth.sub }).lean();
+  const caregiver = await User.findById(req.auth.sub).lean();
+  const isLinked = caregiver.linkedPatients?.map(String).includes(req.params.patientId) || !!link;
+  if (!isLinked) return error(res, 403, 'Not linked to this patient.');
+
+  const patient = await User.findById(req.params.patientId).lean();
+  if (!patient) return error(res, 404, 'Patient not found.');
+
+  const medicines = await Medicine.find({ patientId: patient._id }).lean();
+
+  // 30 days logs
+  const startIST = istDateNDaysAgo(29);
+  const { start: since } = istDayRange(startIST);
+  const logs = await IntakeLog.find({ patientId: patient._id, createdAt: { $gte: since } }).sort({ createdAt: 1 }).lean();
+
+  // Slot analysis: Morning vs Afternoon vs Night
+  const slotStats = {
+    morning: { taken: 0, missed: 0, snoozed: 0, total: 0 },
+    afternoon: { taken: 0, missed: 0, snoozed: 0, total: 0 },
+    night: { taken: 0, missed: 0, snoozed: 0, total: 0 },
+  };
+
+  const dayOfWeekStats = {
+    Sun: { taken: 0, missed: 0 },
+    Mon: { taken: 0, missed: 0 },
+    Tue: { taken: 0, missed: 0 },
+    Wed: { taken: 0, missed: 0 },
+    Thu: { taken: 0, missed: 0 },
+    Fri: { taken: 0, missed: 0 },
+    Sat: { taken: 0, missed: 0 },
+  };
+
+  logs.forEach(l => {
+    const s = l.slot || 'morning';
+    if (slotStats[s]) {
+      slotStats[s][l.status] = (slotStats[s][l.status] || 0) + 1;
+      if (l.status === 'taken' || l.status === 'missed') {
+        slotStats[s].total++;
+      }
+    }
+    const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(l.createdAt).getDay()];
+    if (dayOfWeekStats[dayName] && (l.status === 'taken' || l.status === 'missed')) {
+      dayOfWeekStats[dayName][l.status]++;
+    }
+  });
+
+  // Calculate pattern insights
+  const slotAdherence = {};
+  let worstSlot = null;
+  let worstSlotMissRate = 0;
+
+  for (const [slotKey, counts] of Object.entries(slotStats)) {
+    const total = counts.taken + counts.missed;
+    const adherence = total > 0 ? Math.round((counts.taken / total) * 100) : 100;
+    const missRate = total > 0 ? Math.round((counts.missed / total) * 100) : 0;
+    slotAdherence[slotKey] = { ...counts, adherence, missRate };
+    if (missRate > worstSlotMissRate && total >= 2) {
+      worstSlotMissRate = missRate;
+      worstSlot = slotKey;
+    }
+  }
+
+  let specificPatternInsight = 'Medication intake is generally consistent across all time slots.';
+  if (worstSlot && worstSlotMissRate >= 30) {
+    specificPatternInsight = `Frequently misses ${worstSlot} doses (${worstSlotMissRate}% missed in the last 30 days). Consider adjusting reminder timings.`;
+  } else if (slotStats.afternoon.missed > slotStats.morning.missed && slotStats.afternoon.missed > slotStats.night.missed) {
+    specificPatternInsight = 'Frequently misses afternoon doses (14:00). Midday schedule adjustments recommended.';
+  }
+
+  // 7-day vs 30-day adherence
+  const weekLogs = logs.filter(l => new Date(l.createdAt) >= istDayRange(istDateNDaysAgo(6)).start);
+  const weekTaken = weekLogs.filter(l => l.status === 'taken').length;
+  const weekMissed = weekLogs.filter(l => l.status === 'missed').length;
+  const weekAdherence = (weekTaken + weekMissed) === 0 ? 100 : Math.round((weekTaken / (weekTaken + weekMissed)) * 100);
+
+  const monthTaken = logs.filter(l => l.status === 'taken').length;
+  const monthMissed = logs.filter(l => l.status === 'missed').length;
+  const monthAdherence = (monthTaken + monthMissed) === 0 ? 100 : Math.round((monthTaken / (monthTaken + monthMissed)) * 100);
+
+  // Status classification
+  let statusBadge = 'On Track';
+  if (weekAdherence < 65 || weekMissed >= 2) {
+    statusBadge = 'Critical';
+  } else if (weekAdherence < 80 || weekMissed === 1) {
+    statusBadge = 'Action Needed';
+  }
+
+  res.json({
+    patient: publicUser(patient),
+    statusBadge,
+    weekAdherence,
+    monthAdherence,
+    specificPatternInsight,
+    slotAdherence,
+    dayOfWeekStats,
+    totalLogsCount: logs.length,
+    medicinesCount: medicines.length,
+  });
+});
+
+// Alerts feed with filter chips: All/Missed/LowStock/medicine_added/nudge
 router.get('/alerts', requireAuth, requireRole('caregiver'), async (req, res) => {
   const type = req.query.type;
   const filter = { recipientId: req.auth.sub };
   if (type && type !== 'All') {
-    const map = { 'Missed Dose': 'missed_dose', Missed: 'missed_dose', LowStock: 'low_stock', 'Low Stock': 'low_stock', medicine_added: 'medicine_added' };
+    const map = {
+      'Missed Dose': 'missed_dose',
+      Missed: 'missed_dose',
+      LowStock: 'low_stock',
+      'Low Stock': 'low_stock',
+      medicine_added: 'medicine_added',
+      'Medicine Added': 'medicine_added',
+      Nudge: 'nudge',
+      'Caregiver Nudge': 'nudge',
+      'refill_added': 'refill_added',
+      'Refill Added': 'refill_added',
+    };
     filter.type = map[type] || type.toLowerCase();
   }
   const alerts = await Notification.find(filter).sort({ createdAt: -1 }).limit(50).lean();
   res.json(alerts);
+});
+
+// High-level Platform & Circle Analytics
+router.get('/analytics', requireAuth, requireRole('caregiver'), async (req, res) => {
+  const caregiver = await User.findById(req.auth.sub).lean();
+  const patientIds = caregiver.linkedPatients || [];
+  const patients = await User.find({ _id: { $in: patientIds } }).lean();
+  const medicines = await Medicine.find({ patientId: { $in: patientIds } }).lean();
+
+  const todayIST = toISTDateString(new Date());
+  const { start: todayStart, end: todayEnd } = istDayRange(todayIST);
+  const todayLogs = await IntakeLog.find({ patientId: { $in: patientIds }, createdAt: { $gte: todayStart, $lte: todayEnd } }).lean();
+  const takenToday = todayLogs.filter(l => l.status === 'taken').length;
+  const missedToday = todayLogs.filter(l => l.status === 'missed').length;
+
+  const weekStartIST = istDateNDaysAgo(6);
+  const { start: weekStart } = istDayRange(weekStartIST);
+  const weekLogs = await IntakeLog.find({ patientId: { $in: patientIds }, createdAt: { $gte: weekStart } }).lean();
+  const weekTaken = weekLogs.filter(l => l.status === 'taken').length;
+  const weekMissed = weekLogs.filter(l => l.status === 'missed').length;
+  const weekTotal = weekTaken + weekMissed;
+  const averageAdherence = weekTotal === 0 ? 0 : Math.round((weekTaken / weekTotal) * 100);
+
+  // Low-stock calculation across medicines
+  let lowStockCount = 0;
+  for (const med of medicines) {
+    if (typeof med.initialQuantity === 'number') {
+      const taken = await IntakeLog.countDocuments({ medicineId: med._id, status: 'taken' });
+      const doseQty = parseQty(med.quantityPerDose || med.dose);
+      const remaining = Math.max(0, med.initialQuantity - taken * doseQty);
+      const daysElapsed = Math.max(1, Math.ceil((Date.now() - new Date(med.createdAt)) / 86400000));
+      const avgDaily = (taken * doseQty) / daysElapsed || doseQty;
+      const daysLeft = avgDaily > 0 ? Math.ceil(remaining / avgDaily) : null;
+      if (daysLeft != null && daysLeft <= 5) lowStockCount++;
+    }
+  }
+
+  const activeAlertsCount = await Notification.countDocuments({ recipientId: req.auth.sub });
+
+  res.json({
+    totalPatients: patients.length,
+    totalPrescriptions: medicines.length,
+    averageAdherence,
+    lowStockCount,
+    missedToday,
+    takenToday,
+    activeAlertsCount,
+  });
 });
 
 // Reports weekly/monthly per linked patient

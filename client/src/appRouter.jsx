@@ -27,6 +27,7 @@ export const router = createBrowserRouter([
   { path: '/patient/home', element: <Suspense fallback={<div>Loading...</div>}><PatientHome /></Suspense>, errorElement: <RouteError /> },
   { path: '/patient/medicines', element: <Suspense fallback={<div>Loading...</div>}><PatientMedicines /></Suspense>, errorElement: <RouteError /> },
   { path: '/patient/adherence', element: <Suspense fallback={<div>Loading...</div>}><PatientAdherence /></Suspense>, errorElement: <RouteError /> },
+  { path: '/patient/analytics', element: <Suspense fallback={<div>Loading...</div>}><PatientAdherence /></Suspense>, errorElement: <RouteError /> },
   { path: '/patient/history', element: <Suspense fallback={<div>Loading...</div>}><PatientHistory /></Suspense>, errorElement: <RouteError /> },
   { path: '/patient/refill', element: <Suspense fallback={<div>Loading...</div>}><PatientRefill /></Suspense>, errorElement: <RouteError /> },
   // New Tailwind-only patient routes with Sidebar (adds without changing existing navbar)
@@ -41,6 +42,7 @@ export const router = createBrowserRouter([
   },
   { path: '/caregiver/home', element: <Suspense fallback={<div>Loading...</div>}><CaregiverHome /></Suspense>, errorElement: <RouteError /> },
   { path: '/caregiver/alerts', element: <Suspense fallback={<div>Loading...</div>}><CaregiverAlerts /></Suspense>, errorElement: <RouteError /> },
+  { path: '/caregiver/monitoring', element: <Suspense fallback={<div>Loading...</div>}><CaregiverAlerts /></Suspense>, errorElement: <RouteError /> },
   // Caregiver detail — new Tailwind mapping (mock-aware) + legacy fallback
   { path: '/caregiver/patients/:patientId', element: <Suspense fallback={<div>Loading...</div>}><CaregiverPatientDetail /></Suspense>, errorElement: <RouteError /> },
   { path: '/caregiver/patients/:patientId/detail', element: <Suspense fallback={<div>Loading...</div>}><CaregiverPatientDetail /></Suspense>, errorElement: <RouteError /> },

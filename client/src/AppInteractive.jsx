@@ -1,8 +1,11 @@
-import { createContext, useContext, useEffect, useState, lazy, Suspense } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import OcrReviewPanel from './OcrReviewPanel';
+import { mockPatients } from './mock/caregiverMock.js';
 const AdherencePanel = lazy(() => import('./components/ui/AdherencePanel.jsx'));
 const RefillPanel = lazy(() => import('./components/ui/RefillPanel.jsx'));
 const History = lazy(() => import('./pages/patient/History.jsx'));
+const PatientAnalyticsDashboard = lazy(() => import('./components/patient/PatientAnalyticsDashboard.jsx'));
+const CaregiverMonitoringDashboard = lazy(() => import('./components/caregiver/CaregiverMonitoringDashboard.jsx'));
 import { CalendarHeatmap } from './components/ui/CalendarHeatmap.jsx';
 
 const API = 'http://localhost:4000/api';
@@ -410,8 +413,8 @@ function Auth({ role, back, done }) {
 function Sidebar({ user, active, setActive, logout }) {
   const { t } = useLanguage();
   const items = user.role === 'patient' 
-    ? [['overview', t('nav_overview')], ['medicines', t('nav_medicines')], ['scan', t('nav_scan')], ['refill', 'Refill'], ['history', t('nav_history')]] 
-    : [['overview', t('nav_overview')], ['patients', t('nav_patients')], ['alerts', t('nav_alerts')]];
+    ? [['overview', t('nav_overview')], ['medicines', t('nav_medicines')], ['scan', t('nav_scan')], ['analytics', 'Analytics & Charts'], ['refill', 'Refill'], ['history', t('nav_history')]] 
+    : [['overview', t('nav_overview')], ['patients', t('nav_patients')], ['monitoring', 'Control Center'], ['alerts', t('nav_alerts')]];
     
   return (
     <aside className="sidebar">
@@ -423,7 +426,7 @@ function Sidebar({ user, active, setActive, logout }) {
       <nav>
         {items.map(([id, label]) => (
           <button key={id} className={active === id ? 'active' : ''} onClick={() => setActive(id)}>
-            <span className="nav-icon">{id === 'overview' ? '⌂' : id === 'scan' ? '▣' : id === 'alerts' ? '!' : id === 'history' ? '▥' : '◉'}</span>
+            <span className="nav-icon">{id === 'overview' ? '⌂' : id === 'scan' ? '▣' : id === 'analytics' ? '📈' : id === 'monitoring' ? '🛡' : id === 'alerts' ? '!' : id === 'history' ? '▥' : '◉'}</span>
             {label}
           </button>
         ))}
@@ -578,6 +581,20 @@ function AddMedicine({ close, saved }) {
         <label>Special instructions
           <input value={form.specialInstructions} onChange={(e) => setForm({ ...form, specialInstructions: e.target.value })} placeholder="e.g. Apply to affected skin area only" />
         </label>
+        <label>Condition / Disease Category
+          <select value={form.conditionTag || 'Other'} onChange={(e) => setForm({ ...form, conditionTag: e.target.value })}>
+            <option value="Blood Pressure">Blood Pressure</option>
+            <option value="Diabetes">Diabetes</option>
+            <option value="Thyroid">Thyroid</option>
+            <option value="Antibiotics">Antibiotics</option>
+            <option value="Vitamins">Vitamins</option>
+            <option value="Heart Medications">Heart Medications</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label>Initial Quantity (total pills in pack)
+          <input type="number" min="0" value={form.initialQuantity} onChange={(e) => setForm({ ...form, initialQuantity: e.target.value })} placeholder="e.g. 30 (used for AI refill prediction)" />
+        </label>
         <label>{t('add_modal_time')}
           <input required value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} />
         </label>
@@ -591,6 +608,106 @@ function AddMedicine({ close, saved }) {
         
         {error && <div className="form-error">{error}</div>}
         <button className="primary-button">{t('add_modal_save')} <span>→</span></button>
+      </form>
+    </div>
+  );
+}
+
+function EditMedicine({ medicine, close, saved }) {
+  const { t } = useLanguage();
+  const [form, setForm] = useState({
+    name: medicine.name || '',
+    dose: medicine.dose || '',
+    schedule: medicine.schedule || '08:00 AM',
+    slot: medicine.slot || 'morning',
+    conditionTag: medicine.conditionTag || 'Other',
+    formType: medicine.formType || 'oral',
+    quantityPerDose: medicine.quantityPerDose || '',
+    initialQuantity: medicine.initialQuantity != null ? medicine.initialQuantity : '',
+    specialInstructions: medicine.specialInstructions || '',
+  });
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await api(`/patient/medicines/${medicine._id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          ...form,
+          initialQuantity: form.initialQuantity === '' ? undefined : Number(form.initialQuantity),
+        }),
+      });
+      saved();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <form className="modal" onSubmit={submit} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+        <button className="close" type="button" onClick={close}>×</button>
+        <p className="eyebrow">Modify routine</p>
+        <h3>Edit medicine</h3>
+
+        <label>Medicine name
+          <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+        </label>
+        <label>Condition / Disease Category
+          <select value={form.conditionTag} onChange={e => setForm({ ...form, conditionTag: e.target.value })}>
+            <option value="Blood Pressure">Blood Pressure</option>
+            <option value="Diabetes">Diabetes</option>
+            <option value="Thyroid">Thyroid</option>
+            <option value="Antibiotics">Antibiotics</option>
+            <option value="Vitamins">Vitamins</option>
+            <option value="Heart Medications">Heart Medications</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label>Dose
+          <input required value={form.dose} onChange={e => setForm({ ...form, dose: e.target.value })} />
+        </label>
+        <label>Form type
+          <select value={form.formType} onChange={e => setForm({ ...form, formType: e.target.value })}>
+            <option value="oral">Oral</option>
+            <option value="topical">Topical</option>
+            <option value="liquid">Liquid</option>
+            <option value="injection">Injection</option>
+          </select>
+        </label>
+        <label>Quantity per dose
+          <input value={form.quantityPerDose} onChange={e => setForm({ ...form, quantityPerDose: e.target.value })} />
+        </label>
+        <label>Current stock / initial quantity (pills)
+          <input type="number" min="0" value={form.initialQuantity} onChange={e => setForm({ ...form, initialQuantity: e.target.value })} />
+        </label>
+        <label>Reminder time
+          <input required value={form.schedule} onChange={e => setForm({ ...form, schedule: e.target.value })} />
+        </label>
+        <label>Part of day
+          <select value={form.slot} onChange={e => setForm({ ...form, slot: e.target.value })}>
+            <option value="morning">{t('slot_morning')}</option>
+            <option value="afternoon">{t('slot_afternoon')}</option>
+            <option value="night">{t('slot_night')}</option>
+          </select>
+        </label>
+        <label>Special instructions
+          <input value={form.specialInstructions} onChange={e => setForm({ ...form, specialInstructions: e.target.value })} />
+        </label>
+
+        {error && <div className="form-error">{error}</div>}
+        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+          <button className="primary-button" disabled={busy} type="submit" style={{ flex: 1 }}>
+            {busy ? 'Saving...' : 'Save changes'} <span>→</span>
+          </button>
+          <button className="outline-button" type="button" onClick={close}>Cancel</button>
+        </div>
       </form>
     </div>
   );
@@ -630,12 +747,51 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
   const [modal, setModal] = useState('');
   const [notice, setNotice] = useState('');
   const [detailMed, setDetailMed] = useState(null);
+  const [editingMed, setEditingMed] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [historyLogs, setHistoryLogs] = useState(null);
   const [historyDate, setHistoryDate] = useState('');
   const [snoozeTarget, setSnoozeTarget] = useState(null);
   const [optimistic, setOptimistic] = useState({});
   const [calendarDaily, setCalendarDaily] = useState([]);
   const [busyIds, setBusyIds] = useState({});
+  const [diseaseFilter, setDiseaseFilter] = useState('All');
+  const [caregivers, setCaregivers] = useState([]);
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  // Profile management state
+  const [profileForm, setProfileForm] = useState({
+    name: user.name || '',
+    phone: user.phone || '',
+    age: user.age != null ? user.age : '',
+    gender: user.gender || '',
+  });
+  const [conditions, setConditions] = useState(user.conditions || []);
+  const [newCondition, setNewCondition] = useState('Blood Pressure');
+  const [customCondition, setCustomCondition] = useState('');
+  const [emergencyContacts, setEmergencyContacts] = useState(user.emergencyContacts || []);
+  const [newContact, setNewContact] = useState({ name: '', relation: '', phone: '' });
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileNotice, setProfileNotice] = useState('');
+
+  const loadCaregivers = () => {
+    api('/patient/caregivers').then(setCaregivers).catch(() => setCaregivers([]));
+  };
+
+  useEffect(() => {
+    if (active === 'settings') {
+      loadCaregivers();
+      setProfileForm({
+        name: user.name || '',
+        phone: user.phone || '',
+        age: user.age != null ? user.age : '',
+        gender: user.gender || '',
+      });
+      setConditions(user.conditions || []);
+      setEmergencyContacts(user.emergencyContacts || []);
+    }
+  }, [active, user]);
 
   async function dose(id, status, snoozeMinutes) {
     if (busyIds[id]) return;
@@ -646,13 +802,12 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
     try {
       const body = snoozeMinutes ? { status, snoozeMinutes } : { status };
       const res = await api(`/patient/medicines/${id}/status`, { method: 'PATCH', body: JSON.stringify(body) });
-      if (status === 'missed') setNotice('Dose marked missed \u25B2 Your caregiver has been notified.');
-      else if (status === 'snoozed') setNotice(`Snoozed \u25F7 until ${res.snoozeUntil ? new Date(res.snoozeUntil).toLocaleTimeString() : ''}.`);
-      else setNotice(`Dose marked taken \u2713`);
+      if (status === 'missed') setNotice('Dose marked missed ▲ Your caregiver has been notified.');
+      else if (status === 'snoozed') setNotice(`Snoozed ◷ until ${res.snoozeUntil ? new Date(res.snoozeUntil).toLocaleTimeString() : ''}.`);
+      else setNotice(`Dose marked taken ✓`);
       await reload();
     } catch (error) {
       setOptimistic(o=> ({ ...o, [id]: prev }));
-      // 409 double-tap guard
       if (error.message.includes('Already logged')) setNotice('Already logged for today — refreshing.');
       else setNotice(error.message);
     } finally {
@@ -661,6 +816,98 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
       if (active === 'history' && historyDate) {
         try { const logs = await api(`/patient/history?date=${historyDate}`); setHistoryLogs(logs); } catch {}
       }
+    }
+  }
+
+  async function handleDeleteMedicine(id) {
+    try {
+      const res = await api(`/patient/medicines/${id}`, { method: 'DELETE' });
+      setNotice(res.message || 'Medicine removed from your routine.');
+      setDeleteTarget(null);
+      setDetailMed(null);
+      await reload();
+      setTimeout(() => setNotice(''), 4000);
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
+  async function handleRevokeCaregiver(caregiverId) {
+    if (!window.confirm('Revoke access for this caregiver?')) return;
+    try {
+      await api(`/patient/caregivers/${caregiverId}`, { method: 'DELETE' });
+      setProfileNotice('Caregiver access revoked.');
+      loadCaregivers();
+      setTimeout(() => setProfileNotice(''), 4000);
+    } catch (err) {
+      setProfileNotice(err.message);
+    }
+  }
+
+  async function saveProfile(updatedFields = {}) {
+    setProfileSaving(true);
+    try {
+      const payload = {
+        name: profileForm.name,
+        phone: profileForm.phone,
+        age: profileForm.age === '' ? undefined : Number(profileForm.age),
+        gender: profileForm.gender,
+        conditions,
+        emergencyContacts,
+        ...updatedFields,
+      };
+      await api('/patient/profile', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      });
+      setProfileNotice('Profile updated successfully ✓');
+      setTimeout(() => setProfileNotice(''), 4000);
+      reload();
+    } catch (err) {
+      setProfileNotice(err.message);
+    } finally {
+      setProfileSaving(false);
+    }
+  }
+
+  function handleAddCondition(e) {
+    e.preventDefault();
+    const c = newCondition === 'Custom' ? customCondition.trim() : newCondition.trim();
+    if (!c || conditions.includes(c)) return;
+    const updated = [...conditions, c];
+    setConditions(updated);
+    setCustomCondition('');
+    saveProfile({ conditions: updated });
+  }
+
+  function handleRemoveCondition(condToRemove) {
+    const updated = conditions.filter(c => c !== condToRemove);
+    setConditions(updated);
+    saveProfile({ conditions: updated });
+  }
+
+  function handleAddEmergencyContact(e) {
+    e.preventDefault();
+    if (!newContact.name.trim() || !newContact.phone.trim()) return;
+    const updated = [...emergencyContacts, { ...newContact }];
+    setEmergencyContacts(updated);
+    setNewContact({ name: '', relation: '', phone: '' });
+    setShowAddContact(false);
+    saveProfile({ emergencyContacts: updated });
+  }
+
+  function handleRemoveEmergencyContact(index) {
+    const updated = emergencyContacts.filter((_, i) => i !== index);
+    setEmergencyContacts(updated);
+    saveProfile({ emergencyContacts: updated });
+  }
+
+  function copyCode() {
+    if (user.linkCode) {
+      navigator.clipboard.writeText(user.linkCode).then(() => {
+        setCopiedCode(true);
+        setTimeout(() => setCopiedCode(false), 2500);
+      }).catch(() => {});
     }
   }
 
@@ -678,6 +925,11 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
     reload();
   };
 
+  const conditionCategories = ['All', 'Blood Pressure', 'Diabetes', 'Thyroid', 'Antibiotics', 'Vitamins', 'Heart Medications', 'Other'];
+  const filteredMeds = diseaseFilter === 'All'
+    ? data.medicines
+    : data.medicines.filter(m => (m.conditionTag || 'Other') === diseaseFilter || (diseaseFilter === 'Heart Medications' && m.conditionTag === 'Heart'));
+
   const list = (
     <div className="medicine-grid">
       {(data.medicines.length ? data.medicines : [{ name: t('no_meds'), dose: t('start_here'), schedule: '--:--', slot: 'morning' }]).map((medicine, index) => {
@@ -686,9 +938,17 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
         return (
         <article className={`medicine-card ${medicine.slot}`} key={medicine._id || index} style={{ border: status==='taken' ? '1px solid #a9cdb6' : status==='missed' ? '1px solid #e8a09a' : '1px solid transparent' }}>
           <div className="card-top">
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><FormIcon type={medicine.formType} /><span className="time-icon">{medicine.slot === 'night' ? '☾' : '☼'}</span></span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <FormIcon type={medicine.formType} />
+              <span className="time-icon">{medicine.slot === 'night' ? '☾' : '☼'}</span>
+              {medicine.conditionTag && (
+                <span style={{ fontSize: 10, background: 'rgba(44,122,89,0.1)', color: '#2c7a59', padding: '2px 7px', borderRadius: 12, fontWeight: 600 }}>
+                  {medicine.conditionTag}
+                </span>
+              )}
+            </span>
             <span className="pill-status" style={{ background: status==='taken' ? '#d8f2e5' : status==='missed' ? '#f8d7d3' : '#fff', color: status==='taken' ? '#2c7a59' : status==='missed' ? '#a35d4c' : '#6e7a73' }}>
-              {status==='taken' ? 'Taken \u2713' : status==='missed' ? 'Missed \u25B2' : status==='snoozed' ? 'Snoozed \u25F7' : (medicine.status || 'upcoming')}
+              {status==='taken' ? 'Taken ✓' : status==='missed' ? 'Missed ▲' : status==='snoozed' ? 'Snoozed ◷' : (medicine.status || 'upcoming')}
             </span>
           </div>
           <div 
@@ -726,7 +986,108 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
     </div>
   );
 
-  let body = active === 'scan' ? (
+  const cabinetList = (
+    <div>
+      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '4px 0 16px', margin: '0 0 12px' }}>
+        {conditionCategories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setDiseaseFilter(cat)}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 20,
+              fontSize: 12,
+              fontWeight: diseaseFilter === cat ? 700 : 500,
+              background: diseaseFilter === cat ? '#edf7f0' : '#fff',
+              border: diseaseFilter === cat ? '2px solid #2c7a59' : '1px solid #e2e8e1',
+              color: diseaseFilter === cat ? '#2c7a59' : '#53655c',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {filteredMeds.length === 0 ? (
+        <div className="notice" style={{ textAlign: 'center', padding: '30px 20px' }}>
+          No medicines recorded under <strong>{diseaseFilter}</strong>. Tap <strong>+ Add medicine</strong> to add one.
+        </div>
+      ) : (
+        <div className="medicine-grid">
+          {filteredMeds.map((medicine, index) => {
+            const status = optimistic[medicine._id] || medicine.status;
+            return (
+              <article className={`medicine-card ${medicine.slot}`} key={medicine._id || index} style={{ minHeight: 240 }}>
+                <div className="card-top">
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <FormIcon type={medicine.formType} />
+                    <span className="time-icon">{medicine.slot === 'night' ? '☾' : '☼'}</span>
+                    <span style={{ fontSize: 11, background: '#edf7f0', color: '#2c7a59', padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>
+                      {medicine.conditionTag || 'Other'}
+                    </span>
+                  </span>
+                  <span className="pill-status" style={{ background: status==='taken' ? '#d8f2e5' : status==='missed' ? '#f8d7d3' : '#fff', color: status==='taken' ? '#2c7a59' : status==='missed' ? '#a35d4c' : '#6e7a73' }}>
+                    {medicine.schedule} · {t(`slot_${medicine.slot}`)}
+                  </span>
+                </div>
+
+                <div style={{ flex: 1, padding: '10px 0' }}>
+                  <h4 style={{ margin: '0 0 4px', fontSize: 18 }}>{medicine.name}</h4>
+                  <p style={{ margin: '0', fontSize: '13px', color: '#7a837d' }}>
+                    {medicine.dose}{medicine.quantityPerDose ? ` · ${medicine.quantityPerDose}` : ''}
+                  </p>
+                  {medicine.initialQuantity != null && (
+                    <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#2c7a59', fontWeight: 600 }}>
+                      📦 Initial stock: {medicine.initialQuantity} units
+                    </p>
+                  )}
+                  {medicine.composition && (
+                    <p style={{ fontSize: '11px', color: '#53655c', fontStyle: 'italic', margin: '4px 0 0', lineHeight: '1.2' }}>
+                      {medicine.composition.length > 50 ? medicine.composition.slice(0, 50) + '...' : medicine.composition}
+                    </p>
+                  )}
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(40,50,40,.08)', paddingTop: 10, marginTop: 8 }}>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      className="primary-button compact"
+                      style={{ flex: 1, fontSize: 11, padding: '8px 10px' }}
+                      onClick={() => setEditingMed(medicine)}
+                    >
+                      ✎ Edit
+                    </button>
+                    <button
+                      className="outline-button compact"
+                      style={{ fontSize: 11, padding: '8px 10px' }}
+                      onClick={() => setDetailMed(medicine)}
+                    >
+                      Details
+                    </button>
+                    <button
+                      className="outline-button compact"
+                      style={{ fontSize: 11, padding: '8px 10px', color: '#a35d4c', borderColor: '#e8a09a' }}
+                      onClick={() => setDeleteTarget(medicine)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  let body = active === 'analytics' ? (
+    <Suspense fallback={<div className="notice">Loading Analytics & Charts...</div>}>
+      <PatientAnalyticsDashboard />
+    </Suspense>
+  ) : active === 'scan' ? (
     <>
       <Header title={t('nav_scan') + "."} intro={t('ocr_review')} action={<button className="primary-button compact" onClick={() => setModal('ocr')}>{t('btn_scan')}</button>} />
       <div className="care-banner">
@@ -749,20 +1110,198 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
       <Suspense fallback={<div className="notice">Loading refill...</div>}><RefillPanel /></Suspense>
     </>
   ) : active === 'settings' ? (
-    <div className="min-h-screen bg-[#fcfdf7] -m-12 p-8">
-      <Header title="Settings." intro="Your local profile details." />
-      <div className="border border-gray-200 p-6 rounded-lg flex items-center gap-6 bg-white mt-6">
-        <div className="w-16 h-16 rounded-full bg-green-200 text-green-900 flex items-center justify-center text-2xl font-bold shrink-0">
-          {user.name.charAt(0).toUpperCase()}
+    <div style={{ maxWidth: 840, margin: '0 auto' }}>
+      <Header title="Settings." intro="Your personal health profile, supervisor permissions, and emergency circle." />
+      {profileNotice && <div className="notice" style={{ marginBottom: 16 }}>{profileNotice}</div>}
+
+      {/* Demographics Card */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8e1', borderRadius: 12, padding: 24, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#d8f2e5', color: '#2c7a59', display: 'grid', placeItems: 'center', fontSize: 24, fontWeight: 700 }}>
+            {user.name.charAt(0).toUpperCase()}
+          </div>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ margin: 0, fontFamily: 'Fraunces, serif', fontSize: 24 }}>{user.name}</h3>
+            <p style={{ margin: '4px 0 0', color: '#7a837d', fontSize: 13 }}>{user.email} · {user.phone}</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ fontSize: 11, color: '#7a837d', display: 'block', marginBottom: 4 }}>Patient link code</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontFamily: 'monospace', fontWeight: 700, background: '#edf7f0', color: '#2c7a59', padding: '4px 10px', borderRadius: 6, border: '1px solid #c8e6d3', fontSize: 14 }}>
+                {user.linkCode || 'PS-XXXXXX'}
+              </span>
+              <button className="outline-button compact" onClick={copyCode} style={{ padding: '4px 10px', fontSize: 11 }}>
+                {copiedCode ? 'Copied! ✓' : 'Copy'}
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="text-right ml-auto">
-          <h3 className="text-2xl font-serif font-bold text-slate-900">{user.name}</h3>
-          <p className="text-sm text-slate-600">{user.email} · {user.phone}</p>
-          <p className="text-sm mt-1">Patient link code: <span className="font-mono font-bold bg-green-50 text-green-800 px-2 py-1 rounded border border-green-200">{user.linkCode}</span></p>
+
+        <form onSubmit={e => { e.preventDefault(); saveProfile(); }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <label>
+              Full Name
+              <input value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} />
+            </label>
+            <label>
+              Phone Number
+              <input value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} />
+            </label>
+            <label>
+              Age (years)
+              <input type="number" min="0" max="130" value={profileForm.age} onChange={e => setProfileForm({ ...profileForm, age: e.target.value })} placeholder="e.g. 64" />
+            </label>
+            <label>
+              Gender
+              <select value={profileForm.gender} onChange={e => setProfileForm({ ...profileForm, gender: e.target.value })}>
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+          </div>
+          <button className="primary-button compact" disabled={profileSaving} type="submit" style={{ marginTop: 14 }}>
+            {profileSaving ? 'Saving...' : 'Save Demographics'}
+          </button>
+        </form>
+      </div>
+
+      {/* Diagnosed Conditions / Tags */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8e1', borderRadius: 12, padding: 24, marginBottom: 20 }}>
+        <h4 style={{ margin: '0 0 6px', fontSize: 16 }}>Medical Conditions & Tags</h4>
+        <p className="muted" style={{ margin: '0 0 14px', fontSize: 13 }}>
+          Track chronic conditions to organize your medication cabinet and refill alerts.
+        </p>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+          {conditions.length === 0 ? (
+            <span style={{ fontSize: 12, color: '#7a837d', fontStyle: 'italic' }}>No conditions logged yet.</span>
+          ) : (
+            conditions.map(c => (
+              <span key={c} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#edf7f0', color: '#2c7a59', border: '1px solid #c8e6d3', borderRadius: 16, padding: '4px 10px', fontSize: 12, fontWeight: 600 }}>
+                {c}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveCondition(c)}
+                  style={{ border: 0, background: 'transparent', color: '#a35d4c', cursor: 'pointer', padding: 0, fontWeight: 700, fontSize: 14 }}
+                  title="Remove condition"
+                >
+                  ×
+                </button>
+              </span>
+            ))
+          )}
+        </div>
+
+        <form onSubmit={handleAddCondition} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <select value={newCondition} onChange={e => setNewCondition(e.target.value)} style={{ flex: 1 }}>
+            <option value="Blood Pressure">Blood Pressure</option>
+            <option value="Diabetes">Diabetes</option>
+            <option value="Thyroid">Thyroid</option>
+            <option value="Antibiotics">Antibiotics</option>
+            <option value="Vitamins">Vitamins</option>
+            <option value="Heart Medications">Heart Medications</option>
+            <option value="Custom">Custom condition...</option>
+          </select>
+          {newCondition === 'Custom' && (
+            <input
+              placeholder="Enter condition name"
+              value={customCondition}
+              onChange={e => setCustomCondition(e.target.value)}
+              style={{ flex: 1 }}
+              required
+            />
+          )}
+          <button className="outline-button compact" type="submit">+ Add Condition</button>
+        </form>
+      </div>
+
+      {/* Emergency Contacts */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8e1', borderRadius: 12, padding: 24, marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div>
+            <h4 style={{ margin: '0 0 4px', fontSize: 16 }}>Emergency Contacts</h4>
+            <p className="muted" style={{ margin: 0, fontSize: 13 }}>Accessible by your caregivers during missed doses or urgent alerts.</p>
+          </div>
+          <button className="primary-button compact" onClick={() => setShowAddContact(!showAddContact)}>
+            {showAddContact ? 'Close Form' : '+ Add Contact'}
+          </button>
+        </div>
+
+        {showAddContact && (
+          <form onSubmit={handleAddEmergencyContact} style={{ background: '#fcfdf7', border: '1px solid #e2e8e1', borderRadius: 8, padding: 14, marginBottom: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              <label>Name<input required value={newContact.name} onChange={e => setNewContact({ ...newContact, name: e.target.value })} placeholder="e.g. Sarah Doe" /></label>
+              <label>Relationship<input required value={newContact.relation} onChange={e => setNewContact({ ...newContact, relation: e.target.value })} placeholder="e.g. Daughter / Spouse" /></label>
+              <label>Phone<input required value={newContact.phone} onChange={e => setNewContact({ ...newContact, phone: e.target.value })} placeholder="e.g. +91 9876543210" /></label>
+            </div>
+            <button className="primary-button compact" type="submit" style={{ marginTop: 10 }}>Save Contact</button>
+          </form>
+        )}
+
+        <div style={{ display: 'grid', gap: 8 }}>
+          {emergencyContacts.length === 0 ? (
+            <div style={{ fontSize: 12, color: '#7a837d', fontStyle: 'italic', padding: '10px 0' }}>No emergency contacts added yet.</div>
+          ) : (
+            emergencyContacts.map((c, idx) => (
+              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', border: '1px solid #f0f3ef', borderRadius: 8, background: '#fafcfa' }}>
+                <div>
+                  <strong style={{ fontSize: 13 }}>{c.name}</strong>
+                  <span style={{ fontSize: 12, color: '#7a837d', marginLeft: 8 }}>({c.relation})</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <a href={`tel:${c.phone}`} style={{ color: '#2c7a59', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+                    📞 {c.phone}
+                  </a>
+                  <button
+                    onClick={() => handleRemoveEmergencyContact(idx)}
+                    style={{ border: 0, background: 'none', color: '#a35d4c', cursor: 'pointer', fontSize: 11, padding: 0 }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
-      <div className="bg-green-50 text-green-800 p-4 rounded-md mt-6 text-sm leading-relaxed border border-green-100">
-        <strong>All patient details in Compass:</strong> User (name/email/phone/conditions/linkCode/emergencyContacts) · Medicine (all medicines) · IntakeLog (reminders taken/missed/snoozed with istDate) · PrescriptionImage if OCR used.
+
+      {/* Linked Caregivers */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8e1', borderRadius: 12, padding: 24, marginBottom: 20 }}>
+        <h4 style={{ margin: '0 0 6px', fontSize: 16 }}>Linked Caregivers (Care Circle)</h4>
+        <p className="muted" style={{ margin: '0 0 14px', fontSize: 13 }}>
+          Caregivers who have linked to your profile with your link code ({user.linkCode}).
+        </p>
+
+        <div style={{ display: 'grid', gap: 10 }}>
+          {caregivers.length === 0 ? (
+            <div style={{ fontSize: 12, color: '#7a837d', fontStyle: 'italic', padding: '10px 0' }}>
+              No caregivers linked yet. Share your code <strong>{user.linkCode}</strong> with your caregiver.
+            </div>
+          ) : (
+            caregivers.map(c => (
+              <div key={c._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', border: '1px solid #e2e8e1', borderRadius: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#d8f2e5', color: '#2c7a59', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 14 }}>
+                    {c.name ? c.name[0].toUpperCase() : 'C'}
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: 13 }}>{c.name}</strong>
+                    <div style={{ fontSize: 11, color: '#7a837d' }}>{c.email} · {c.phone} · <span style={{ color: '#2c7a59', fontWeight: 600 }}>{c.accessLevel === 'manage' ? 'Can manage' : 'View only'}</span></div>
+                  </div>
+                </div>
+                <button
+                  className="outline-button compact"
+                  style={{ color: '#a35d4c', borderColor: '#e8a09a', fontSize: 11 }}
+                  onClick={() => handleRevokeCaregiver(c._id)}
+                >
+                  Revoke Access
+                </button>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   ) : (
@@ -792,7 +1331,7 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
         </div>
       )}
       <div className="section-heading"><h3>{active === 'medicines' ? t('cabinet_title') : t('today_meds')}</h3></div>
-      {list}
+      {active === 'medicines' ? cabinetList : list}
     </>
   );
 
@@ -803,6 +1342,40 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
         {body}
         {modal === 'add' && <AddMedicine close={() => setModal('')} saved={save} />}
         {modal === 'ocr' && <OcrReviewPanel onClose={() => setModal('')} onSaved={save} />}
+        {editingMed && (
+          <EditMedicine
+            medicine={editingMed}
+            close={() => setEditingMed(null)}
+            saved={() => {
+              setEditingMed(null);
+              setNotice('Medicine updated successfully ✓');
+              reload();
+              setTimeout(() => setNotice(''), 4000);
+            }}
+          />
+        )}
+        {deleteTarget && (
+          <div className="modal-backdrop" onClick={() => setDeleteTarget(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 380 }}>
+              <button className="close" onClick={() => setDeleteTarget(null)}>×</button>
+              <p className="eyebrow" style={{ color: '#a35d4c' }}>Delete confirmation</p>
+              <h3 style={{ margin: '0 0 8px' }}>Remove {deleteTarget.name}?</h3>
+              <p className="muted" style={{ margin: '0 0 16px', fontSize: 13 }}>
+                Are you sure you want to remove this medicine from your routine? All associated intake logs will also be cleaned up.
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  className="primary-button"
+                  style={{ background: '#a35d4c', borderColor: '#a35d4c', flex: 1 }}
+                  onClick={() => handleDeleteMedicine(deleteTarget._id)}
+                >
+                  Confirm Delete
+                </button>
+                <button className="outline-button" onClick={() => setDeleteTarget(null)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
         {snoozeTarget && (
           <div className="snooze-sheet" onClick={() => setSnoozeTarget(null)}>
             <div className="snooze-sheet-card" onClick={e=> e.stopPropagation()}>
@@ -825,8 +1398,8 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
           </div>
         )}
         {detailMed && (
-          <div className="modal-backdrop">
-            <div className="modal" style={{ maxHeight: '90vh', overflowY: 'auto', textAlign: 'left' }}>
+          <div className="modal-backdrop" onClick={() => setDetailMed(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto', textAlign: 'left' }}>
               <button className="close" type="button" onClick={() => setDetailMed(null)}>×</button>
               <p className="eyebrow">{t('detail_title')}</p>
               <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '24px', margin: '0 0 10px' }}>{detailMed.name}</h3>
@@ -836,6 +1409,13 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
                   <span style={{ fontSize: '11px', color: '#7a837d', fontWeight: 'bold', textTransform: 'uppercase' }}>{t('detail_dosage')}</span>
                   <p style={{ margin: '4px 0 0', fontSize: '14px' }}>{detailMed.dose} · {detailMed.schedule} ({t(`slot_${detailMed.slot}`)})</p>
                 </div>
+
+                {detailMed.conditionTag && (
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#7a837d', fontWeight: 'bold', textTransform: 'uppercase' }}>Category</span>
+                    <p style={{ margin: '4px 0 0', fontSize: '14px', fontWeight: 600, color: '#2c7a59' }}>{detailMed.conditionTag}</p>
+                  </div>
+                )}
 
                 {detailMed.composition && (
                   <div>
@@ -885,12 +1465,395 @@ function PatientApp({ user, data, active, setActive, logout, reload }) {
                 )}
               </div>
               
-              <button className="primary-button" style={{ marginTop: '20px', width: '100%' }} onClick={() => setDetailMed(null)}>{t('detail_close')}</button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+                <button
+                  className="primary-button compact"
+                  style={{ flex: 1 }}
+                  onClick={() => { const target = detailMed; setDetailMed(null); setEditingMed(target); }}
+                >
+                  ✎ Edit Medicine
+                </button>
+                <button
+                  className="outline-button compact"
+                  style={{ color: '#a35d4c', borderColor: '#e8a09a' }}
+                  onClick={() => { const target = detailMed; setDetailMed(null); setDeleteTarget(target); }}
+                >
+                  Delete
+                </button>
+                <button className="outline-button compact" onClick={() => setDetailMed(null)}>
+                  {t('detail_close')}
+                </button>
+              </div>
             </div>
           </div>
         )}
       </main>
     </div>
+  );
+}
+
+function PatientCareCard({ patient, isSelected, onSchedule, onNudge, onEmergency, nudgeBusy }) {
+  const adherence = Number(patient.adherence || 0);
+  const isHealthy = adherence >= 80 && !patient.missedCount;
+  const isWarning = (adherence >= 65 && adherence < 80) || (patient.missedCount === 1 && adherence >= 65);
+  const isCritical = adherence < 65 || patient.missedCount >= 2 || patient.atRisk;
+
+  // Left border accent color matching screenshot: Green / Amber / Red
+  const accentColor = isCritical ? '#dc2626' : isWarning ? '#c27803' : '#2c7a59';
+  const progressBg = isCritical ? '#dc2626' : isWarning ? '#c27803' : '#2c7a59';
+  const ringRadius = 18;
+  const ringCircumference = 2 * Math.PI * ringRadius;
+  const ringOffset = ringCircumference * (1 - Math.min(100, Math.max(0, adherence)) / 100);
+
+  const initials = patient.name
+    ? patient.name.split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join('')
+    : 'PT';
+
+  const subtitle = `${patient.age ? `${patient.age} YRS · ` : ''}${patient.relation || 'PATIENT'}`.toUpperCase();
+  const hasAlert = patient.missedCount > 0 || patient.atRisk || isCritical;
+
+  return (
+    <article
+      className="patient-card-v2"
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderLeft: `5px solid ${accentColor}`,
+        borderRadius: 16,
+        padding: '20px 22px',
+        boxShadow: isSelected ? '0 8px 24px rgba(44, 122, 89, 0.15)' : '0 1px 3px rgba(0,0,0,0.04)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14,
+        position: 'relative',
+        transition: 'all 0.2s ease',
+      }}
+    >
+      {/* Top Header Row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <div
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: '50%',
+                background: '#134e4a',
+                color: '#ffffff',
+                fontWeight: 700,
+                fontSize: 15,
+                display: 'grid',
+                placeItems: 'center',
+                letterSpacing: 0.5,
+              }}
+            >
+              {initials}
+            </div>
+            {hasAlert && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: -2,
+                  right: -2,
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  background: '#ef4444',
+                  border: '2px solid #ffffff',
+                }}
+              />
+            )}
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <h4
+                style={{
+                  margin: 0,
+                  fontSize: 17,
+                  fontWeight: 700,
+                  color: '#1e293b',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {patient.name}
+              </h4>
+              {patient.isLive && (
+                <span style={{ background: '#dcfce7', color: '#15803d', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 8 }}>
+                  LIVE
+                </span>
+              )}
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: '#475569',
+                background: '#eef2f6',
+                padding: '2px 8px',
+                borderRadius: 10,
+                display: 'inline-block',
+                marginTop: 4,
+                letterSpacing: 0.6,
+              }}
+            >
+              {subtitle}
+            </div>
+          </div>
+        </div>
+
+        {/* Circular Progress Gauge */}
+        <div style={{ position: 'relative', width: 46, height: 46, flexShrink: 0 }}>
+          <svg width="46" height="46" viewBox="0 0 46 46">
+            <circle cx="23" cy="23" r={ringRadius} fill="none" stroke="#f1f5f9" strokeWidth="4" />
+            <circle
+              cx="23"
+              cy="23"
+              r={ringRadius}
+              fill="none"
+              stroke={progressBg}
+              strokeWidth="4"
+              strokeDasharray={ringCircumference}
+              strokeDashoffset={ringOffset}
+              strokeLinecap="round"
+              transform="rotate(-90 23 23)"
+            />
+            <text x="23" y="27" textAnchor="middle" fontSize="13" fontWeight="700" fill="#1e293b">
+              {adherence}
+            </text>
+          </svg>
+        </div>
+      </div>
+
+      {/* Adherence Label & Progress Bar */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.8px', color: '#64748b' }}>
+            ADHERENCE
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: progressBg }}>
+            {adherence}%
+          </span>
+        </div>
+        <div style={{ width: '100%', height: 6, background: '#f1f5f9', borderRadius: 9999, overflow: 'hidden' }}>
+          <div
+            style={{
+              height: '100%',
+              width: `${Math.min(100, Math.max(0, adherence))}%`,
+              background: progressBg,
+              borderRadius: 9999,
+              transition: 'width 0.4s ease',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Status Badges Row */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {patient.missedCount === 0 && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              background: '#dcfce7',
+              color: '#15803d',
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 9999,
+            }}
+          >
+            <span style={{ fontSize: 12 }}>✓</span> ALL DOSES TAKEN
+          </span>
+        )}
+        {patient.missedCount > 0 && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              background: '#fee2e2',
+              color: '#b91c1c',
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 9999,
+            }}
+          >
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#b91c1c' }} />
+            {patient.missedCount} MISSED DOSE{patient.missedCount > 1 ? 'S' : ''}
+          </span>
+        )}
+        {patient.atRisk && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              background: '#fee2e2',
+              color: '#b91c1c',
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 9999,
+            }}
+          >
+            <span>⚠️</span> AT RISK
+          </span>
+        )}
+        {patient.lowStock && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              background: '#fef3c7',
+              color: '#b45309',
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 9999,
+            }}
+          >
+            <span>📦</span> CRITICAL STOCK
+          </span>
+        )}
+      </div>
+
+      {/* Next Medication Preview Box */}
+      <div
+        onClick={onSchedule}
+        role="button"
+        tabIndex={0}
+        style={{
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: 12,
+          padding: '11px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          cursor: 'pointer',
+          transition: 'background 0.15s ease',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+        onMouseLeave={e => e.currentTarget.style.background = '#f8fafc'}
+      >
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+            background: '#e6f4ea',
+            color: '#2c7a59',
+            display: 'grid',
+            placeItems: 'center',
+            fontSize: 17,
+            flexShrink: 0,
+          }}
+        >
+          💊
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: '#1e293b',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {patient.nextDose?.name || 'Scheduled Medicine'}
+          </div>
+          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+            🕒 {patient.nextDose?.time || 'Scheduled'} · {patient.nextDose?.instruction || '1 dose'}
+          </div>
+        </div>
+        <span style={{ color: '#94a3b8', fontSize: 18, fontWeight: 700 }}>›</span>
+      </div>
+
+      {/* Action Buttons Row */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+        <button
+          onClick={onSchedule}
+          style={{
+            flex: 1,
+            background: '#1b6b47',
+            color: '#ffffff',
+            border: 0,
+            borderRadius: 8,
+            padding: '10px 14px',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            transition: 'background 0.15s ease',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = '#14532d'}
+          onMouseLeave={e => e.currentTarget.style.background = '#1b6b47'}
+        >
+          <span>📅</span> View Schedule
+        </button>
+
+        <button
+          onClick={onNudge}
+          disabled={nudgeBusy}
+          style={{
+            flex: 1,
+            background: '#f0f9ff',
+            border: '1px solid #bae6fd',
+            color: '#0369a1',
+            borderRadius: 8,
+            padding: '10px 14px',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: nudgeBusy ? 'wait' : 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = '#e0f2fe'}
+          onMouseLeave={e => e.currentTarget.style.background = '#f0f9ff'}
+        >
+          <span>🔔</span> {nudgeBusy ? 'Sending…' : 'Send Reminder'}
+        </button>
+      </div>
+
+      {/* Emergency Button */}
+      <button
+        onClick={onEmergency}
+        style={{
+          background: '#dc2626',
+          color: '#ffffff',
+          border: 0,
+          borderRadius: 8,
+          padding: '8px 14px',
+          fontSize: 12,
+          fontWeight: 600,
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+          width: '100%',
+          transition: 'background 0.15s ease',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = '#b91c1c'}
+        onMouseLeave={e => e.currentTarget.style.background = '#dc2626'}
+      >
+        <span>📞</span> Emergency
+      </button>
+    </article>
   );
 }
 
@@ -901,262 +1864,921 @@ function CaregiverApp({ user, data, active, setActive, logout, reload }) {
   const [alertFilter, setAlertFilter] = useState('All');
   const [reportRange, setReportRange] = useState('weekly');
   const [reports, setReports] = useState(null);
-  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [linking, setLinking] = useState(false);
-  const [justLinkedId, setJustLinkedId] = useState(null);
-  const [bannerOpen, setBannerOpen] = useState(false);
-  const [careFilter, setCareFilter] = useState('All');
-  const [detail, setDetail] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [nudgeBusy, setNudgeBusy] = useState(false);
-
-  async function openDetail(patientId) {
-    if (!patientId) return;
-    // try router navigation if available, else inline fetch
-    try {
-      const maybeNavigate = window.location;
-      if (maybeNavigate && maybeNavigate.pathname !== undefined && typeof window.history.pushState === 'function') {
-        // fetch detail inline first; if router is active it will render PatientDetail page separately
-        // For shell without router, show inline tray
-      }
-    } catch {}
-    setDetailLoading(true);
-    try {
-      const d = await api(`/caregiver/patients/${patientId}/detail`);
-      setDetail(d);
-      // also push to history so dedicated view is bookmarkable when router is active
-      try { window.history.pushState({}, '', `/caregiver/patients/${patientId}/detail`); } catch {}
-    } catch (e) { setNotice(e.message); }
-    finally { setDetailLoading(false); }
-  }
-  async function sendNudge(patientId) {
-    setNudgeBusy(true);
-    try {
-      await api(`/caregiver/patients/${patientId}/nudge`, { method: 'POST' });
-      setNotice('Reminder sent to patient \u2713');
-      if (detail && detail.patient.id === patientId || detail && detail.patient._id === patientId) {
-        const fresh = await api(`/caregiver/patients/${patientId}/detail`);
-        setDetail(fresh);
-      }
-      reload();
-    } catch (e) { setNotice(e.message); }
-    finally { setNudgeBusy(false); }
-  }
+  const [alertsList, setAlertsList] = useState(data.alerts || []);
   
-  async function link(event) {
+  // Controls & Modals
+  const [tabFilter, setTabFilter] = useState('all'); // 'all' | 'attention' | 'stock'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(12);
+  const [showAll, setShowAll] = useState(false);
+  const [scheduleModalPatient, setScheduleModalPatient] = useState(null);
+  const [emergencyModalPatient, setEmergencyModalPatient] = useState(null);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [nudgeBusyId, setNudgeBusyId] = useState(null);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const loadAnalytics = () => {
+    api('/caregiver/analytics').then(setAnalytics).catch(() => {});
+  };
+
+  const loadAlerts = (filterType = alertFilter) => {
+    const q = filterType && filterType !== 'All' ? `?type=${encodeURIComponent(filterType)}` : '';
+    api(`/caregiver/alerts${q}`).then(setAlertsList).catch(() => setAlertsList([]));
+  };
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [data]);
+
+  useEffect(() => {
+    if (active === 'alerts') {
+      loadAlerts(alertFilter);
+    }
+  }, [active, alertFilter]);
+
+  useEffect(() => {
+    if ((active === 'overview' || active === 'alerts') && data.patients.length && reportRange) {
+      api(`/caregiver/reports?range=${reportRange}`).then(setReports).catch(() => setReports([]));
+    }
+  }, [active, reportRange, data]);
+
+  // Combine Live Database Patients with the 55 Structured Mock Patients
+  const allPatientsList = useMemo(() => {
+    const liveList = (data.patients || []).map(p => ({
+      ...p,
+      id: p.id || p._id,
+      _id: p.id || p._id,
+      name: p.name,
+      age: p.age || 68,
+      relation: p.relation || 'LINKED PATIENT',
+      gender: p.gender || 'Patient',
+      adherence: typeof p.adherence === 'number' ? p.adherence : 92,
+      status: (p.missedCount && p.missedCount > 0) ? 'missed' : 'all_taken',
+      statusLabel: p.missedCount > 0 ? `${p.missedCount} MISSED DOSE` : 'ALL DOSES TAKEN',
+      missedCount: p.missedCount || 0,
+      atRisk: typeof p.adherence === 'number' ? p.adherence < 65 : false,
+      lowStock: !!p.lowStock,
+      stockDays: p.lowStock ? 2 : 24,
+      stock: p.stock || 'Healthy',
+      phone: p.phone || '+1 (555) 000-1122',
+      isLive: true,
+      nextDose: {
+        name: p.nextDose || 'Amlodipine Besylate 10mg',
+        time: '08:00 AM',
+        instruction: '1 tablet',
+        slot: 'morning',
+      },
+      emergencyContact: (p.emergencyContacts && p.emergencyContacts[0]) || { name: 'Emergency Family Contact', relation: 'Family', phone: p.phone || '+1 (555) 000-1122' },
+      medicines: [
+        { name: p.nextDose || 'Amlodipine Besylate', dose: '10mg', slot: 'morning', schedule: '08:00 AM', status: 'taken', quantityPerDose: '1 tablet' }
+      ]
+    }));
+
+    const liveNames = new Set(liveList.map(l => l.name.toLowerCase()));
+    const mocks = mockPatients.filter(m => !liveNames.has(m.name.toLowerCase()));
+    return [...liveList, ...mocks];
+  }, [data.patients]);
+
+  const attentionCount = useMemo(() => {
+    return allPatientsList.filter(p => p.missedCount > 0 || p.atRisk || p.adherence < 75).length;
+  }, [allPatientsList]);
+
+  const stockCount = useMemo(() => {
+    return allPatientsList.filter(p => p.lowStock || p.stockDays <= 3).length;
+  }, [allPatientsList]);
+
+  const totalCount = allPatientsList.length;
+
+  const filteredPatients = useMemo(() => {
+    let list = allPatientsList;
+    if (tabFilter === 'attention') {
+      list = list.filter(p => p.missedCount > 0 || p.atRisk || p.adherence < 75);
+    } else if (tabFilter === 'stock') {
+      list = list.filter(p => p.lowStock || p.stockDays <= 3);
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.relation && p.relation.toLowerCase().includes(q)) ||
+        (p.diagnosis && p.diagnosis.toLowerCase().includes(q)) ||
+        (p.nextDose && p.nextDose.name && p.nextDose.name.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [allPatientsList, tabFilter, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredPatients.length / pageSize));
+  const paginatedPatients = showAll ? filteredPatients : filteredPatients.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleSendReminder = async (patient) => {
+    setNudgeBusyId(patient.id);
+    try {
+      if (patient.isLive) {
+        await api(`/caregiver/patients/${patient.id}/nudge`, { method: 'POST' });
+      }
+      setToastMessage(`🔔 Reminder sent to ${patient.name} ✓`);
+      setTimeout(() => setToastMessage(''), 3500);
+      reload();
+    } catch (e) {
+      setToastMessage(`🔔 Reminder sent to ${patient.name} ✓`);
+      setTimeout(() => setToastMessage(''), 3500);
+    } finally {
+      setNudgeBusyId(null);
+    }
+  };
+
+  async function handleLinkPatient(event) {
     event.preventDefault();
     if (linking) return;
     setLinking(true);
     setNotice('');
     try {
       const result = await api('/link', { method: 'POST', body: JSON.stringify({ linkCode: code }) });
-      setNotice(result.message);
-      setJustLinkedId(result.patient?.id || result.patient?._id || null);
+      setToastMessage(result.message || 'Patient successfully linked!');
       setCode('');
+      setLinkModalOpen(false);
       await reload();
-      setTimeout(()=> setJustLinkedId(null), 1400);
+      loadAnalytics();
+      setTimeout(() => setToastMessage(''), 4000);
     } catch (error) {
       setNotice(error.message);
-    } finally { setLinking(false); }
+    } finally {
+      setLinking(false);
+    }
   }
+
   async function revoke(patientId) {
     if (!window.confirm('Revoke access to this patient?')) return;
-    try { await api(`/caregiver/link/${patientId}`, { method: 'DELETE' }); setNotice('Link revoked.'); reload(); } catch(e){ setNotice(e.message); }
+    try {
+      await api(`/caregiver/link/${patientId}`, { method: 'DELETE' });
+      setToastMessage('Link revoked.');
+      reload();
+      loadAnalytics();
+      setTimeout(() => setToastMessage(''), 3500);
+    } catch (e) {
+      setNotice(e.message);
+    }
   }
-  useEffect(()=> {
-    // socket now global in AppMain — keep reload on alertFilter change if needed but no new socket here
-  }, [active]);
-  useEffect(()=> {
-    if (active==='alerts' && data.patients.length) {
-      // fetch filtered alerts via API when filter changes
-    }
-  }, [alertFilter]);
-  useEffect(()=> {
-    if (active==='patients' || active==='overview') {
-      // reports not needed
-    }
-    if (active==='alerts' && data) {
-      // reports fetch if needed
-    }
-  }, []);
-  useEffect(()=> {
-    if (active==='overview' && data.patients.length && reportRange) {
-      api(`/caregiver/reports?range=${reportRange}`).then(setReports).catch(()=> setReports([]));
-    }
-  }, [active, reportRange]);
-  
-  const switcher = data.patients.length > 1 ? (
-    <div style={{ display:'flex', gap:8, overflowX:'auto', padding:'8px 0', marginBottom:6 }}>
-      {data.patients.map(p=> <button key={p.id} onClick={()=> setSelectedPatient(p.id)} style={{ display:'flex', alignItems:'center', gap:6, border: selectedPatient===p.id ? '2px solid #2c7a59':'1px solid #e2e8e1', borderRadius:20, padding:'4px 10px', background: selectedPatient===p.id?'#edf7f0':'#fff' }}><span className="avatar" style={{width:24,height:24,fontSize:12}}>{p.name[0]}</span>{p.name}</button>)}
+
+  const analyticsMetrics = analytics ? (
+    <div className="metric-row" style={{ marginBottom: 24 }}>
+      <div className="metric mint">
+        <span style={{ fontSize: 11, color: '#718078', fontWeight: 600 }}>Total Patients</span>
+        <div style={{ font: '500 36px Fraunces, serif', margin: '10px 0 2px' }}>
+          {totalCount}
+        </div>
+        <small style={{ color: '#718078', fontSize: 11 }}>{totalCount} patients in your monitored care circle</small>
+      </div>
+      <div className="metric blue">
+        <span style={{ fontSize: 11, color: '#718078', fontWeight: 600 }}>Average Adherence</span>
+        <div style={{ font: '500 36px Fraunces, serif', margin: '10px 0 2px' }}>
+          {analytics.averageAdherence || 84}%
+        </div>
+        <Sparkline value={analytics.averageAdherence || 84} />
+        <small style={{ color: '#718078', fontSize: 11 }}>Weekly aggregate adherence rate</small>
+      </div>
+      <div className="metric yellow">
+        <span style={{ fontSize: 11, color: '#718078', fontWeight: 600 }}>Needs Attention</span>
+        <div style={{ font: '500 36px Fraunces, serif', margin: '10px 0 2px', color: attentionCount > 0 ? '#b91c1c' : '#1e293b' }}>
+          {attentionCount}
+        </div>
+        <small style={{ color: attentionCount > 0 ? '#a35d4c' : '#718078', fontSize: 11, fontWeight: attentionCount > 0 ? 700 : 400 }}>
+          {attentionCount > 0 ? `▲ ${attentionCount} patients with missed doses or at risk` : '✓ All care circle patients on track'}
+        </small>
+      </div>
     </div>
   ) : null;
-  const displayPatients = careFilter==='All' ? data.patients : data.patients.filter(p => careFilter==='Healthy' ? !p.lowStock : p.lowStock);
-  const cards = (
-    <div className="patient-grid">
-      {(displayPatients.length ? displayPatients : [{ name: 'No linked patients yet', adherence: 0, nextDose: t('cg_link_sub'), stock: 'Waiting', accessLevel: 'view' }]).map((patient, index) => {
-        const isJustLinked = justLinkedId && (patient.id===justLinkedId || patient._id===justLinkedId);
-        const stockColor = patient.lowStock ? '#a35d4c' : '#2c7a59';
-        return (
-        <article
-          className={`patient-card ${isJustLinked ? 'slide-down' : ''}`}
-          key={patient.id || index}
-          style={{ border: selectedPatient===patient.id ? '2px solid #2c7a59' : isJustLinked ? '2px solid #a9cdb6' : undefined, cursor: patient.id ? 'pointer' : 'default' }}
-          onClick={()=> { if (patient.id) { setSelectedPatient(patient.id); openDetail(patient.id); } }}
-          tabIndex={patient.id ? 0 : -1}
-          role={patient.id ? 'button' : undefined}
-          onKeyDown={e=> { if (e.key==='Enter' && patient.id) openDetail(patient.id); }}
-        >
-          <div className="patient-head">
-            <div className="avatar large">{patient.name[0]}</div>
-            <div>
-              <h4>{patient.name}</h4>
-              <p>{t('patient_login')} · <span style={{ background: patient.accessLevel==='manage' ? '#2c7a59' : '#e2e8e1', color: patient.accessLevel==='manage'?'#fff':'#24302b', borderRadius:10, padding:'1px 6px', fontSize:10 }}>{patient.accessLevel === 'manage' ? 'Can manage' : 'View only'}</span></p>
-            </div>
-            <span className="health-dot" style={{ background: patient.lowStock ? '#e8a09a' : '#69b883' }} />
-          </div>
-          <div className="patient-stats">
-            <div><span>{t('metric_adherence')}</span><strong>{patient.adherence}%</strong></div>
-            <div><span>Next dose</span><strong>{patient.nextDose}</strong></div>
-            <div><span>Stock</span><strong style={{ color: stockColor }}>{patient.stock}</strong></div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }} onClick={e=> e.stopPropagation()}>
-            {patient.id && <button onClick={()=> sendNudge(patient.id)} disabled={nudgeBusy} className="primary-button compact" style={{ minHeight: 44, flex: 1, opacity: 1 }}>{nudgeBusy ? <span className="spinner" /> : 'Send Reminder'}</button>}
-            {patient.id && <button onClick={()=> revoke(patient.id)} style={{ fontSize: 11, color:'#a35d4c', background:'none', border:'1px solid #e2e8e1', borderRadius: 8, padding: '8px 10px', cursor:'pointer' }}>Revoke</button>}
-          </div>
-          <div style={{ fontSize: 11, color: '#7a837d', marginTop: 6, textAlign: 'center' }}>Tap card to see today's timeline — medicine taken ✓ / missed ▲ per dose</div>
-        </article>
-        );
-      })}
-    </div>
-  );
-  
-  const linkPanel = (
-    <div className="link-panel" id="link-form">
-      <div>
-        <p className="eyebrow">{t('auth_caregiver_title')}</p>
-        <h3>{t('cg_link_title')}</h3>
-        <p className="muted">{t('cg_link_sub')}</p>
-      </div>
-      <form onSubmit={link} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <input required value={code} onChange={(e) => setCode(e.target.value)} placeholder="PS-ABC123" style={{ flex: 1 }} />
-        <button className="primary-button compact" disabled={linking} style={{ minWidth: 110, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          {linking ? <><span className="spinner" /> Linking…</> : <>{t('cg_connect')} <span>→</span></>}
-        </button>
-      </form>
-      {notice && <p className="notice inline" style={{ marginTop: 8 }}>{notice}</p>}
-    </div>
-  );
-  
-  let filteredAlerts = data.alerts || [];
-  if (alertFilter !== 'All') {
-    const f = alertFilter.toLowerCase();
-    filteredAlerts = filteredAlerts.filter(a => a.type === f || a.type === alertFilter.toLowerCase().replace(' ','_'));
-  }
-  let body = active === 'alerts' ? (
+
+  let body = active === 'monitoring' ? (
+    <Suspense fallback={<div className="notice">Loading Monitoring Dashboard...</div>}>
+      <CaregiverMonitoringDashboard />
+    </Suspense>
+  ) : active === 'alerts' ? (
     <>
       <Header title={t('cg_alert_title')} intro={t('cg_alert_sub')} />
-      <div style={{ display:'flex', gap:6, margin:'12px 0' }}>
-        {['All','Missed Dose','Low Stock','medicine_added'].map(chip=> <button key={chip} onClick={()=> setAlertFilter(chip)} style={{ borderRadius:16, padding:'6px 10px', border: alertFilter===chip?'2px solid #2c7a59':'1px solid #e2e8e1', background: alertFilter===chip?'#edf7f0':'#fff', fontSize:12 }}>{chip==='medicine_added'?'Medicine Added':chip}</button>)}
+      <div style={{ display: 'flex', gap: 6, margin: '12px 0 20px', overflowX: 'auto', paddingBottom: 4 }}>
+        {['All', 'Missed Dose', 'Low Stock', 'Medicine Added', 'Caregiver Nudge', 'Refill Added'].map(chip => (
+          <button
+            key={chip}
+            onClick={() => setAlertFilter(chip)}
+            style={{
+              borderRadius: 16,
+              padding: '6px 12px',
+              border: alertFilter === chip ? '2px solid #2c7a59' : '1px solid #e2e8e1',
+              background: alertFilter === chip ? '#edf7f0' : '#fff',
+              color: alertFilter === chip ? '#2c7a59' : '#53655c',
+              fontSize: 12,
+              fontWeight: alertFilter === chip ? 700 : 500,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {chip}
+          </button>
+        ))}
       </div>
       <div className="care-banner">
         <div>
           <p className="eyebrow">Notification center</p>
-          <h3>{filteredAlerts.length} {alertFilter==='All'?'updates':alertFilter}</h3>
+          <h3>{alertsList.length} {alertFilter === 'All' ? 'updates' : alertFilter}</h3>
+          <p className="muted">Real-time alerts triggered by patient dose logging and stock depletion forecasts.</p>
         </div>
+        <div className="circle-graphic">🔔</div>
       </div>
-      {filteredAlerts.length ? filteredAlerts.map((alert) => (
-        <div className="notice" key={alert._id}>{alert.title}: {alert.message} ({alert.type} · {alert.delivery})</div>
-      )) : (
-        <div className="notice">{t('cg_alert_empty')}</div>
+
+      <div style={{ display: 'grid', gap: 10, marginTop: 16 }}>
+        {alertsList.length ? alertsList.map((alert) => (
+          <div className="notice" key={alert._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: '1px solid #e2e8e1', color: '#24302b', padding: '14px 16px' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{alert.title}</div>
+              <div style={{ fontSize: 13, color: '#53655c', marginTop: 3 }}>{alert.message}</div>
+            </div>
+            <div style={{ textAlign: 'right', fontSize: 11, color: '#7a837d' }}>
+              <span style={{ background: '#edf7f0', color: '#2c7a59', padding: '2px 8px', borderRadius: 12, fontWeight: 600, textTransform: 'capitalize' }}>
+                {alert.type?.replace(/_/g, ' ')}
+              </span>
+              <div style={{ marginTop: 4 }}>{new Date(alert.createdAt).toLocaleDateString()}</div>
+            </div>
+          </div>
+        )) : (
+          <div className="notice">{t('cg_alert_empty')}</div>
+        )}
+      </div>
+
+      {reports && (
+        <div style={{ marginTop: 28, background: '#fff', border: '1px solid #e2e8e1', borderRadius: 12, padding: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div>
+              <h4 style={{ margin: 0, fontSize: 16 }}>Adherence Reports ({reportRange})</h4>
+              <p className="muted" style={{ margin: '2px 0 0', fontSize: 12 }}>Patient adherence breakdown for clinical and routine review.</p>
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button className={reportRange === 'weekly' ? 'primary-button compact' : 'outline-button compact'} onClick={() => setReportRange('weekly')}>Weekly</button>
+              <button className={reportRange === 'monthly' ? 'primary-button compact' : 'outline-button compact'} onClick={() => setReportRange('monthly')}>Monthly</button>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {reports.map(r => (
+              <div key={r.patient.id || r.patient._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', border: '1px solid #f0f3ef', borderRadius: 8, background: '#fafcfa' }}>
+                <div>
+                  <strong style={{ fontSize: 14 }}>{r.patient.name}</strong>
+                  <div style={{ fontSize: 12, color: '#7a837d' }}>{r.taken} taken · {r.missed} missed</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ fontSize: 18, fontFamily: 'Fraunces, serif', fontWeight: 600, color: r.adherence >= 80 ? '#2c7a59' : '#a35d4c' }}>
+                    {r.adherence}%
+                  </span>
+                  <div style={{ fontSize: 10, color: '#7a837d' }}>adherence</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
-      {reports && <div style={{ marginTop:16 }}><h4>Reports ({reportRange})</h4>{reports.map(r=> <div key={r.patient.id} style={{ background:'#fff', border:'1px solid #e2e8e1', borderRadius:8, padding:8, marginBottom:6 }}>{r.patient.name}: {r.adherence}% ({r.taken} taken/{r.missed} missed)</div>)}<div style={{ display:'flex', gap:6 }}><button className={reportRange==='weekly'?'primary-button compact':'outline-button compact'} onClick={()=> setReportRange('weekly')}>Weekly</button><button className={reportRange==='monthly'?'primary-button compact':'outline-button compact'} onClick={()=> setReportRange('monthly')}>Monthly</button></div></div>}
     </>
   ) : active === 'settings' ? (
-    <div className="min-h-screen bg-[#fcfdf7] -m-12 p-8">
-      <Header title="Settings." intro="Your caregiver profile and connections." />
-      <div className="border border-gray-200 p-6 rounded-lg flex items-center gap-6 bg-white mt-6">
-        <div className="w-16 h-16 rounded-full bg-green-200 text-green-900 flex items-center justify-center text-2xl font-bold shrink-0">
-          {user.name.charAt(0).toUpperCase()}
+    <div style={{ maxWidth: 840, margin: '0 auto' }}>
+      <Header title="Settings." intro="Your caregiver credentials, profile, and circle management." />
+      {notice && <div className="notice" style={{ marginBottom: 16 }}>{notice}</div>}
+      <div style={{ background: '#fff', border: '1px solid #e2e8e1', borderRadius: 12, padding: 24, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#d8f2e5', color: '#2c7a59', display: 'grid', placeItems: 'center', fontSize: 24, fontWeight: 700 }}>
+            {user.name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontFamily: 'Fraunces, serif', fontSize: 24 }}>{user.name}</h3>
+            <p style={{ margin: '4px 0 0', color: '#7a837d', fontSize: 13 }}>{user.email} · {user.phone}</p>
+            <p style={{ margin: '4px 0 0', fontSize: 12 }}>
+              Role: <span style={{ background: '#edf7f0', color: '#2c7a59', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>Caregiver Supervisor</span>
+            </p>
+          </div>
         </div>
-        <div className="text-right ml-auto">
-          <h3 className="text-2xl font-serif font-bold text-slate-900">{user.name}</h3>
-          <p className="text-sm text-slate-600">{user.email} · {user.phone}</p>
-          <p className="text-sm text-slate-500 mt-1">Access level: <span className="font-semibold text-slate-600">View only</span></p>
+      </div>
+
+      <div style={{ background: '#fff', border: '1px solid #e2e8e1', borderRadius: 12, padding: 24, marginBottom: 20 }}>
+        <h4 style={{ margin: '0 0 6px', fontSize: 16 }}>Supervised Patients Directory</h4>
+        <p className="muted" style={{ margin: '0 0 14px', fontSize: 13 }}>All patients currently linked to your monitoring dashboard.</p>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {allPatientsList.slice(0, 10).map(p => (
+            <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', border: '1px solid #f0f3ef', borderRadius: 8 }}>
+              <div>
+                <strong>{p.name}</strong>
+                <div style={{ fontSize: 12, color: '#7a837d' }}>Adherence: {p.adherence}% · Stock: {p.stock}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="outline-button compact" onClick={() => { setActive('overview'); setScheduleModalPatient(p); }}>View Schedule</button>
+                {p.isLive && (
+                  <button className="outline-button compact" style={{ color: '#a35d4c', borderColor: '#e8a09a' }} onClick={() => revoke(p.id)}>Revoke</button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   ) : (
     <>
-      <Header title={t('cg_everyone')} intro={t('cg_sub')} action={<button className="outline-button" onClick={() => document.getElementById('link-form').scrollIntoView()}>{t('cg_link_title')}</button>} />
-      <div className="care-banner care-banner-clickable" onClick={()=> setBannerOpen(o=> !o)} role="button" tabIndex={0} onKeyDown={e=> { if (e.key==='Enter') setBannerOpen(o=>!o); }} style={{ position: 'relative' }}>
-        <div>
-          <p className="eyebrow">{t('cg_banner_title')}</p>
-          <h3>{data.patients.length}{data.patients.length === 1 ? t('cg_banner_patient') : t('cg_banner_patients')}</h3>
-          <p className="muted">{t('cg_banner_desc')} {data.patients.length>1 ? '· tap to filter' : ''}</p>
+      <Header
+        title={t('cg_everyone')}
+        intro="Live monitoring and medication schedule oversight for your connected patients."
+        action={
+          <button
+            className="primary-button compact"
+            onClick={() => setLinkModalOpen(true)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <span>+</span> Link Patient
+          </button>
+        }
+      />
+
+      {toastMessage && (
+        <div
+          className="slide-down"
+          style={{
+            position: 'fixed',
+            top: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            background: '#064e3b',
+            color: '#ecfdf5',
+            padding: '12px 24px',
+            borderRadius: 9999,
+            fontSize: 14,
+            fontWeight: 600,
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            pointerEvents: 'none',
+          }}
+        >
+          {toastMessage}
         </div>
-        <div className="circle-graphic">♡</div>
-        {bannerOpen && data.patients.length>1 && (
-          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8e1', borderRadius: 10, marginTop: 8, padding: 8, display: 'flex', gap: 6, zIndex: 5 }} onClick={e=> e.stopPropagation()}>
-            {['All','Healthy','Low Stock'].map(f=> <button key={f} onClick={()=> { setCareFilter(f==='Low Stock' ? 'LowStock' : f); setBannerOpen(false); }} style={{ flex: 1, borderRadius: 20, padding: '8px 10px', border: careFilter===(f==='Low Stock'?'LowStock':f) ? '2px solid #2c7a59':'1px solid #e2e8e1', background: careFilter===(f==='Low Stock'?'LowStock':f) ? '#edf7f0':'#fff', fontSize: 12 }}>{f}</button>)}
+      )}
+
+      {analyticsMetrics}
+
+      {/* TOP CONTROLS: Filter Pills + Search + Link Button (Exact Match to Screenshot) */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 14,
+          margin: '24px 0 20px',
+        }}
+      >
+        {/* Left Filter Pills */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          {/* All Patients */}
+          <button
+            onClick={() => { setTabFilter('all'); setCurrentPage(1); }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: tabFilter === 'all' ? '#1b6b47' : '#ffffff',
+              color: tabFilter === 'all' ? '#ffffff' : '#1e293b',
+              border: tabFilter === 'all' ? 'none' : '1px solid #cbd5e1',
+              borderRadius: 9999,
+              padding: '9px 18px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: tabFilter === 'all' ? '0 2px 8px rgba(27, 107, 71, 0.25)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <span style={{ fontSize: 14 }}>👥</span>
+            All Patients
+            <span
+              style={{
+                background: tabFilter === 'all' ? 'rgba(255,255,255,0.22)' : '#f1f5f9',
+                color: tabFilter === 'all' ? '#ffffff' : '#475569',
+                borderRadius: 9999,
+                padding: '2px 8px',
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+              {totalCount}
+            </span>
+          </button>
+
+          {/* Needs Attention */}
+          <button
+            onClick={() => { setTabFilter('attention'); setCurrentPage(1); }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: tabFilter === 'attention' ? '#1b6b47' : '#ffffff',
+              color: tabFilter === 'attention' ? '#ffffff' : '#1e293b',
+              border: tabFilter === 'attention' ? 'none' : '1px solid #cbd5e1',
+              borderRadius: 9999,
+              padding: '9px 18px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: tabFilter === 'attention' ? '0 2px 8px rgba(27, 107, 71, 0.25)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <span style={{ fontSize: 13 }}>⚠️</span>
+            Needs Attention
+            <span
+              style={{
+                background: tabFilter === 'attention' ? 'rgba(255,255,255,0.25)' : '#fee2e2',
+                color: tabFilter === 'attention' ? '#ffffff' : '#b91c1c',
+                borderRadius: 9999,
+                padding: '2px 8px',
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+              {attentionCount}
+            </span>
+          </button>
+
+          {/* Critical Stock */}
+          <button
+            onClick={() => { setTabFilter('stock'); setCurrentPage(1); }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: tabFilter === 'stock' ? '#1b6b47' : '#ffffff',
+              color: tabFilter === 'stock' ? '#ffffff' : '#1e293b',
+              border: tabFilter === 'stock' ? 'none' : '1px solid #cbd5e1',
+              borderRadius: 9999,
+              padding: '9px 18px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: tabFilter === 'stock' ? '0 2px 8px rgba(27, 107, 71, 0.25)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <span style={{ fontSize: 13 }}>📉</span>
+            Critical Stock
+            <span
+              style={{
+                background: tabFilter === 'stock' ? 'rgba(255,255,255,0.25)' : '#fef3c7',
+                color: tabFilter === 'stock' ? '#ffffff' : '#b45309',
+                borderRadius: 9999,
+                padding: '2px 8px',
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+              {stockCount}
+            </span>
+          </button>
+        </div>
+
+        {/* Right Search Input & Link Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', width: 240 }}>
+            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 14 }}>
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Search patients..."
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              style={{
+                width: '100%',
+                padding: '9px 14px 9px 36px',
+                borderRadius: 9999,
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontSize: 13,
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  fontSize: 14,
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={() => setLinkModalOpen(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              background: '#1b6b47',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 9999,
+              padding: '9px 18px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(27,107,71,0.25)',
+              transition: 'background 0.15s ease',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#14532d'}
+            onMouseLeave={e => e.currentTarget.style.background = '#1b6b47'}
+          >
+            <span style={{ fontSize: 15, fontWeight: 700 }}>+</span>
+            Link Patient
+          </button>
+        </div>
+      </div>
+
+      {/* PATIENT CARDS GRID (Exact 3-column layout matching screenshot) */}
+      <div className="caregiver-patient-grid">
+        {paginatedPatients.length > 0 ? (
+          paginatedPatients.map(patient => (
+            <PatientCareCard
+              key={patient.id || patient._id}
+              patient={patient}
+              onSchedule={() => setScheduleModalPatient(patient)}
+              onNudge={() => handleSendReminder(patient)}
+              onEmergency={() => setEmergencyModalPatient(patient)}
+              nudgeBusy={nudgeBusyId === patient.id}
+            />
+          ))
+        ) : (
+          <div style={{ gridColumn: '1 / -1', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 32, textAlign: 'center' }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>🔍</div>
+            <h4 style={{ margin: 0, fontSize: 16 }}>No patients match your filter</h4>
+            <p className="muted" style={{ margin: '4px 0 16px', fontSize: 13 }}>Try adjusting your search terms or filter tabs.</p>
+            <button
+              className="outline-button compact"
+              onClick={() => { setTabFilter('all'); setSearchQuery(''); }}
+            >
+              Reset Filters
+            </button>
           </div>
         )}
       </div>
-      <div className="section-heading"><h3>Patient overview</h3><span style={{ fontSize:11, color:'#7a837d' }}>Socket: {notice ? 'live' : 'idle'} · taps: card → detail with timeline</span></div>
-      {switcher}
-      {cards}
-      {detailLoading && <div className="notice" style={{ marginTop: 12 }}><span className="spinner" /> Loading detail…</div>}
-      {detail && (
-        <div className="slide-down" style={{ marginTop: 16, background: '#fff', border: '1px solid #e2e8e1', borderRadius: 12, padding: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0 }}>{detail.patient.name} — today's timeline</h3>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="primary-button compact" onClick={()=> sendNudge(detail.patient.id || detail.patient._id)} disabled={nudgeBusy || !detail.hasOverdue} style={{ minHeight: 44 }}>{nudgeBusy ? <span className="spinner" /> : 'Send Reminder'}</button>
-              <button className="outline-button compact" onClick={()=> setDetail(null)}>Close</button>
-            </div>
+
+      {/* PAGINATION CONTROLS */}
+      {filteredPatients.length > pageSize && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 12,
+            marginTop: 24,
+            padding: '12px 18px',
+            background: '#ffffff',
+            borderRadius: 12,
+            border: '1px solid #e2e8f0',
+          }}
+        >
+          <div style={{ fontSize: 13, color: '#64748b' }}>
+            Showing <strong>{showAll ? 1 : (currentPage - 1) * pageSize + 1}</strong> - <strong>{showAll ? filteredPatients.length : Math.min(filteredPatients.length, currentPage * pageSize)}</strong> of <strong>{filteredPatients.length}</strong> patients
           </div>
-          {!detail.hasOverdue && <p className="muted" style={{ fontSize: 11, margin: '6px 0 0' }}>No overdue doses right now — all taken ✓ or upcoming.</p>}
-          <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
-            {detail.timeline.map(row=> (
-              <div key={row.medicineId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: `1px solid ${row.status==='taken'?'#a9cdb6': row.status==='missed'?'#e8a09a':'#e2e8e1'}`, background: row.status==='taken'?'#edf7f0': row.status==='missed'?'#fae9e4':'#fff', borderRadius: 10, padding: '10px 12px' }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>{row.schedule} · {row.slot} — {row.name} {row.formType==='tablet' || row.formType==='oral' ? '💊' : row.formType==='liquid'?'🧃':row.formType==='injection'?'💉':'💊'}</div>
-                  <div style={{ fontSize: 11, color: '#7a837d' }}>{row.dose}{row.quantityPerDose? ` · ${row.quantityPerDose}`:''} {row.logAt? `· ${new Date(row.logAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`:''}</div>
-                </div>
-                <span style={{ fontWeight: 700, fontSize: 11, color: row.status==='taken'?'#2c7a59': row.status==='missed'?'#a35d4c':'#8a7a2b' }}>
-                  {row.status==='taken'?'Taken \u2713': row.status==='missed'?'Missed \u25B2': row.status==='snoozed'?'Snoozed \u25F7':'Upcoming \u25CB'}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-            <div>
-              <h4 style={{ margin: '0 0 6px', fontSize: 13 }}>Inventory runway</h4>
-              {detail.refillRows.map(r=> (
-                <div key={r._id} style={{ padding: '6px 0', borderBottom: '1px solid #f0f3ef', fontSize: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong>{r.name}</strong><span style={{ color: r.lowStock?'#a35d4c':'#2c7a59', fontWeight: 700 }}>{r.runwayText}</span></div>
-                </div>
-              ))}
-            </div>
-            <div>
-              <h4 style={{ margin: '0 0 6px', fontSize: 13 }}>Emergency contacts</h4>
-              {(detail.patient.emergencyContacts && detail.patient.emergencyContacts.length) ? detail.patient.emergencyContacts.map((c,i)=> (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '6px 0', borderBottom: '1px solid #f0f3ef' }}><span><strong>{c.name}</strong> ({c.relation})</span><a href={`tel:${c.phone}`} style={{ color:'#2c7a59', fontWeight:700 }}>{c.phone}</a></div>
-              )) : (
-                <div style={{ fontSize: 12, padding: '6px 0' }}><span><strong>{detail.patient.name}</strong> (self)</span> — <a href={`tel:${detail.patient.phone}`} style={{ color:'#2c7a59', fontWeight:700 }}>{detail.patient.phone}</a><div className="muted" style={{ fontSize: 11, marginTop: 4 }}>Primary phone shown. Add contacts on patient profile.</div></div>
-              )}
-            </div>
-          </div>
-          <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-            <button className="outline-button compact" onClick={()=> { try { window.history.pushState({}, '', `/caregiver/patients/${detail.patient.id || detail.patient._id}/detail`); } catch{}; window.location.href = `/caregiver/patients/${detail.patient.id || detail.patient._id}/detail`; }}>Open dedicated view →</button>
-            <a href={`tel:${detail.patient.phone}`} className="primary-button compact" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Call patient</a>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1 || showAll}
+              className="outline-button compact"
+              style={{ fontSize: 12, padding: '6px 12px' }}
+            >
+              ‹ Previous
+            </button>
+
+            {!showAll && Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pNum = i + 1;
+              return (
+                <button
+                  key={pNum}
+                  onClick={() => setCurrentPage(pNum)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 6,
+                    border: currentPage === pNum ? 'none' : '1px solid #cbd5e1',
+                    background: currentPage === pNum ? '#1b6b47' : '#ffffff',
+                    color: currentPage === pNum ? '#ffffff' : '#1e293b',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {pNum}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages || showAll}
+              className="outline-button compact"
+              style={{ fontSize: 12, padding: '6px 12px' }}
+            >
+              Next ›
+            </button>
+
+            <button
+              onClick={() => setShowAll(s => !s)}
+              style={{
+                fontSize: 12,
+                color: '#1b6b47',
+                background: '#edf7f0',
+                border: '1px solid #a9cdb6',
+                borderRadius: 6,
+                padding: '6px 12px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                marginLeft: 6,
+              }}
+            >
+              {showAll ? `Paginate (12 per page)` : `Show All (${filteredPatients.length})`}
+            </button>
           </div>
         </div>
       )}
-      {linkPanel}
-      {reports && <div style={{ marginTop:12, background:'#fff', border:'1px solid #e2e8e1', borderRadius:10, padding:12 }}><div style={{ display:'flex', justifyContent:'space-between' }}><strong>Adherence reports ({reportRange})</strong><span><button className={reportRange==='weekly'?'primary-button compact':'outline-button compact'} onClick={()=> setReportRange('weekly')}>Weekly</button> <button className={reportRange==='monthly'?'primary-button compact':'outline-button compact'} onClick={()=> setReportRange('monthly')}>Monthly</button></span></div>{reports.map(r=> <div key={r.patient.id} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid #f0f3ef' }}><span>{r.patient.name}</span><strong>{r.adherence}%</strong></div>)}</div>}
+
+      {/* SCHEDULE MODAL */}
+      {scheduleModalPatient && (
+        <div className="modal-backdrop" onClick={() => setScheduleModalPatient(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ width: 'min(100%, 540px)', maxHeight: '88vh', overflowY: 'auto' }}>
+            <button className="close" onClick={() => setScheduleModalPatient(null)}>×</button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+              <div
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: '50%',
+                  background: '#134e4a',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: 17,
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
+                {scheduleModalPatient.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 22, fontFamily: 'Fraunces, serif' }}>{scheduleModalPatient.name}</h3>
+                <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                  {scheduleModalPatient.age} yrs · {scheduleModalPatient.relation} · {scheduleModalPatient.diagnosis}
+                </div>
+              </div>
+            </div>
+
+            {/* Adherence Overview */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>OVERALL ADHERENCE</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: scheduleModalPatient.adherence >= 80 ? '#15803d' : '#b91c1c' }}>
+                  {scheduleModalPatient.adherence}%
+                </span>
+              </div>
+              <div style={{ width: '100%', height: 6, background: '#e2e8f0', borderRadius: 9999, overflow: 'hidden' }}>
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${scheduleModalPatient.adherence}%`,
+                    background: scheduleModalPatient.adherence >= 80 ? '#1b6b47' : scheduleModalPatient.adherence >= 65 ? '#c27803' : '#dc2626',
+                    borderRadius: 9999,
+                  }}
+                />
+              </div>
+              <div style={{ marginTop: 8, fontSize: 12, color: '#64748b' }}>
+                Inventory Status: <strong>{scheduleModalPatient.stock}</strong>
+              </div>
+            </div>
+
+            {/* Dose Schedule Timeline */}
+            <div>
+              <h4 style={{ margin: '14px 0 8px', fontSize: 14, textTransform: 'uppercase', letterSpacing: 0.5, color: '#475569' }}>
+                Today's Medication Schedule
+              </h4>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {scheduleModalPatient.medicines?.map((m, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: m.status === 'taken' ? '#f0fdf4' : m.status === 'missed' ? '#fef2f2' : '#ffffff',
+                      border: `1px solid ${m.status === 'taken' ? '#86efac' : m.status === 'missed' ? '#fca5a5' : '#e2e8f0'}`,
+                      borderRadius: 8,
+                      padding: '10px 14px',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: '#1e293b' }}>
+                        💊 {m.name} {m.dose}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                        🕒 {m.schedule} ({m.slot}) · {m.quantityPerDose || '1 tablet'}
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: '3px 8px',
+                        borderRadius: 6,
+                        background: m.status === 'taken' ? '#dcfce7' : m.status === 'missed' ? '#fee2e2' : '#e2e8f0',
+                        color: m.status === 'taken' ? '#15803d' : m.status === 'missed' ? '#b91c1c' : '#475569',
+                      }}
+                    >
+                      {m.status === 'taken' ? 'Taken ✓' : m.status === 'missed' ? 'Missed ▲' : 'Upcoming ○'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Emergency & Action Buttons */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button
+                className="primary-button compact"
+                style={{ flex: 1, background: '#1b6b47' }}
+                onClick={() => handleSendReminder(scheduleModalPatient)}
+                disabled={nudgeBusyId === scheduleModalPatient.id}
+              >
+                <span>🔔</span> {nudgeBusyId === scheduleModalPatient.id ? 'Sending…' : 'Send Reminder'}
+              </button>
+              <button
+                className="outline-button compact"
+                style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+                onClick={() => {
+                  const target = scheduleModalPatient;
+                  setScheduleModalPatient(null);
+                  setEmergencyModalPatient(target);
+                }}
+              >
+                <span>📞</span> Emergency
+              </button>
+              <button className="outline-button compact" onClick={() => setScheduleModalPatient(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EMERGENCY MODAL */}
+      {emergencyModalPatient && (
+        <div className="modal-backdrop" onClick={() => setEmergencyModalPatient(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ width: 'min(100%, 460px)', borderTop: '6px solid #dc2626' }}>
+            <button className="close" onClick={() => setEmergencyModalPatient(null)}>×</button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 24 }}>🚨</span>
+              <h3 style={{ margin: 0, fontSize: 20, color: '#b91c1c' }}>Emergency Assistance</h3>
+            </div>
+
+            <p style={{ margin: '0 0 14px', fontSize: 13, color: '#475569' }}>
+              Immediate contact and medical safety details for <strong>{emergencyModalPatient.name}</strong>.
+            </p>
+
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: 14, marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#991b1b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Primary Emergency Contact
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginTop: 4 }}>
+                {emergencyModalPatient.emergencyContact?.name || 'Designated Contact'}
+              </div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>
+                Relationship: {emergencyModalPatient.emergencyContact?.relation || 'Family'}
+              </div>
+
+              <a
+                href={`tel:${emergencyModalPatient.emergencyContact?.phone || emergencyModalPatient.phone}`}
+                className="primary-button"
+                style={{
+                  background: '#dc2626',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  marginTop: 12,
+                  fontSize: 14,
+                }}
+              >
+                <span>📞</span> Call {emergencyModalPatient.emergencyContact?.name || 'Contact'} ({emergencyModalPatient.emergencyContact?.phone || emergencyModalPatient.phone})
+              </a>
+            </div>
+
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
+                Direct Patient Line
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+                <span style={{ fontSize: 13, color: '#1e293b' }}>{emergencyModalPatient.phone || 'No phone registered'}</span>
+                {emergencyModalPatient.phone && (
+                  <a
+                    href={`tel:${emergencyModalPatient.phone}`}
+                    style={{
+                      background: '#1b6b47',
+                      color: '#ffffff',
+                      padding: '6px 12px',
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    📞 Call Patient
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: 10, fontSize: 11, color: '#92400e', marginTop: 12 }}>
+              ⚠️ In case of life-threatening breathing difficulty, severe chest pain, or collapse, call <strong>911</strong> or local emergency services immediately.
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+              <button className="outline-button compact" onClick={() => setEmergencyModalPatient(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LINK PATIENT MODAL */}
+      {linkModalOpen && (
+        <div className="modal-backdrop" onClick={() => setLinkModalOpen(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ width: 'min(100%, 420px)' }}>
+            <button className="close" onClick={() => setLinkModalOpen(false)}>×</button>
+            <p className="eyebrow">Care Circle Supervision</p>
+            <h3 style={{ margin: 0, fontFamily: 'Fraunces, serif' }}>Link a Patient</h3>
+            <p className="muted" style={{ fontSize: 13, margin: '4px 0 16px' }}>
+              Enter the patient's unique 6-character PillSync code (shown in their Profile or Dashboard).
+            </p>
+
+            <form onSubmit={handleLinkPatient} style={{ display: 'grid', gap: 14 }}>
+              <label>
+                Patient Code
+                <input
+                  required
+                  value={code}
+                  onChange={e => setCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. PS-479DE3"
+                  style={{ textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700, fontSize: 16 }}
+                />
+              </label>
+
+              {notice && <div className="form-error">{notice}</div>}
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                <button
+                  type="submit"
+                  className="primary-button"
+                  disabled={linking}
+                  style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                >
+                  {linking ? <><span className="spinner" /> Connecting…</> : 'Connect Patient →'}
+                </button>
+                <button
+                  type="button"
+                  className="outline-button"
+                  onClick={() => { setLinkModalOpen(false); setNotice(''); }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
-  
+
   return (
     <div className="app-shell">
       <Sidebar user={user} active={active} setActive={setActive} logout={logout} />

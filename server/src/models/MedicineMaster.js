@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const medicineMasterSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
-  normalizedName: { type: String, required: true, trim: true, lowercase: true, index: true },
+  normalizedName: { type: String, required: true, trim: true, lowercase: true },
   composition: { type: String, trim: true },
   uses: { type: String, trim: true },
   sideEffects: { type: String, trim: true },

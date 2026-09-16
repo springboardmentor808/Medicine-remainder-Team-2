@@ -10,8 +10,10 @@ export const publicUser = (user) => ({
   phone: user.phone,
   role: user.role,
   linkCode: user.linkCode,
-  conditions: user.conditions,
-  emergencyContacts: user.emergencyContacts,
+  conditions: user.conditions || [],
+  age: user.age || null,
+  gender: user.gender || null,
+  emergencyContacts: user.emergencyContacts || [],
   hasProfileImage: !!user.profileImage,
   profileImageMimeType: user.profileImageMimeType || null,
 });

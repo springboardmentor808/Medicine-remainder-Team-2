@@ -5,6 +5,7 @@ import Medicine from '../models/Medicine.js';
 import MedicineMaster from '../models/MedicineMaster.js';
 import Notification from '../models/Notification.js';
 import IntakeLog from '../models/IntakeLog.js';
+import CaregiverLink from '../models/CaregiverLink.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { ocrUpload } from '../middleware/upload.js';
 import { publicUser } from '../utils/tokens.js';
@@ -13,7 +14,7 @@ import { deliverNotification } from '../utils/delivery.js';
 import { ocrServiceUrl, ocrInternalToken } from '../config/env.js';
 import { emitToCaregiver } from '../socket.js';
 import { toISTDateString, istDayRange, istDateNDaysAgo } from '../utils/time.js';
-import { validate, medicineCreateSchema, statusPatchSchema } from '../middleware/validate.js';
+import { validate, medicineCreateSchema, medicineUpdateSchema, refillSchema, profileUpdateSchema, statusPatchSchema } from '../middleware/validate.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 
 const router = express.Router();
@@ -325,6 +326,99 @@ router.get('/refill', requireAuth, requireRole('patient'), async (req, res) => {
     };
   }));
   res.json(refill);
+});
+
+// Update medicine details
+router.put('/medicines/:id', requireAuth, requireRole('patient'), validate(medicineUpdateSchema), async (req, res) => {
+  const medicine = await Medicine.findOneAndUpdate(
+    { _id: req.params.id, patientId: req.auth.sub },
+    { $set: req.body },
+    { new: true }
+  );
+  if (!medicine) return error(res, 404, 'That medicine could not be found.');
+  res.json({ medicine });
+});
+
+// Delete medicine
+router.delete('/medicines/:id', requireAuth, requireRole('patient'), async (req, res) => {
+  const medicine = await Medicine.findOneAndDelete({ _id: req.params.id, patientId: req.auth.sub });
+  if (!medicine) return error(res, 404, 'That medicine could not be found.');
+  await IntakeLog.deleteMany({ patientId: req.auth.sub, medicineId: req.params.id }).catch(() => {});
+  res.json({ ok: true, message: `${medicine.name} was removed from your routine.` });
+});
+
+// Refill / restock medicine units
+router.post('/medicines/:id/refill', requireAuth, requireRole('patient'), validate(refillSchema), async (req, res) => {
+  const medicine = await Medicine.findOne({ _id: req.params.id, patientId: req.auth.sub });
+  if (!medicine) return error(res, 404, 'That medicine could not be found.');
+  const addedQty = Number(req.body.quantity);
+  const currentBase = typeof medicine.initialQuantity === 'number' ? medicine.initialQuantity : 0;
+  medicine.initialQuantity = currentBase + addedQty;
+  await medicine.save();
+
+  const patient = await User.findById(req.auth.sub).lean();
+  const caregivers = await User.find({ linkedPatients: req.auth.sub, role: 'caregiver' }).lean();
+  await Promise.all(caregivers.map(async (caregiver) => {
+    const notification = await Notification.create({
+      recipientId: caregiver._id,
+      type: 'refill_added',
+      title: 'Medicine restocked',
+      message: `${patient.name} restocked ${addedQty} units of ${medicine.name}.`,
+    });
+    await deliverNotification(caregiver, notification);
+    emitToCaregiver(caregiver._id, 'alert', notification);
+  }));
+
+  res.json({ ok: true, medicine, added: addedQty, message: `Added ${addedQty} units to ${medicine.name}.` });
+});
+
+// Get linked caregivers for this patient
+router.get('/caregivers', requireAuth, requireRole('patient'), async (req, res) => {
+  const links = await CaregiverLink.find({ patientId: req.auth.sub }).lean();
+  const caregiverIds = links.map(l => l.caregiverId);
+  const caregivers = await User.find({ _id: { $in: caregiverIds } }).lean();
+  const linkMap = new Map(links.map(l => [l.caregiverId.toString(), l]));
+
+  const result = caregivers.map(c => {
+    const link = linkMap.get(c._id.toString());
+    return {
+      _id: c._id,
+      name: c.name,
+      email: c.email,
+      phone: c.phone,
+      accessLevel: link?.accessLevel || 'view',
+      linkedAt: link?.createdAt || c.createdAt,
+    };
+  });
+  res.json(result);
+});
+
+// Revoke caregiver access from patient side
+router.delete('/caregivers/:caregiverId', requireAuth, requireRole('patient'), async (req, res) => {
+  await CaregiverLink.deleteOne({ patientId: req.auth.sub, caregiverId: req.params.caregiverId });
+  await User.findByIdAndUpdate(req.params.caregiverId, { $pull: { linkedPatients: req.auth.sub } });
+  
+  const patient = await User.findById(req.auth.sub).lean();
+  const notification = await Notification.create({
+    recipientId: req.params.caregiverId,
+    type: 'link_revoked',
+    title: 'Access revoked',
+    message: `${patient.name} revoked caregiver access.`,
+  });
+  emitToCaregiver(req.params.caregiverId, 'alert', notification);
+
+  res.json({ ok: true, message: 'Caregiver access revoked.' });
+});
+
+// Update patient profile (conditions, emergencyContacts, age, gender)
+router.put('/profile', requireAuth, requireRole('patient'), validate(profileUpdateSchema), async (req, res) => {
+  const updated = await User.findByIdAndUpdate(
+    req.auth.sub,
+    { $set: req.body },
+    { new: true, runValidators: true }
+  ).lean();
+  if (!updated) return error(res, 404, 'User not found.');
+  res.json({ ok: true, user: publicUser(updated) });
 });
 
 export default router;
