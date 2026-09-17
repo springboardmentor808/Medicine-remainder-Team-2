@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "elastic-agent-builder": {
+      "type": "http",
+      "url": "https://ai-and-weekend-d14347.kb.us-east-1.aws.elastic.cloud/api/agent_builder/mcp",
+      "headers": {
+        "Authorization": "ApiKey OUJXVFBxQUJyZlB5MzlTZV84QTc6QTNRWmtGTTJrdkd6WWxsRWVfRl9FUQ==",
+        "Accept": "application/json"
+      }
+    }
+  }
+}
+
