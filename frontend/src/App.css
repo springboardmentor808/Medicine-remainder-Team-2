@@ -1,0 +1,6 @@
+/* PillSync — App-level styles (component-specific overrides) */
+
+/* Animate spin utility for loading spinners */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

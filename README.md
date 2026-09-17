@@ -1,97 +1,192 @@
-# PillSync - Healthcare & Medication Tracking Management System
+# 💊 PillSync — Medication Reminder & Notification System
 
-A production-ready, unified full-stack **MERN Healthcare & Medication Tracking System** built with MongoDB, Express, React, Node.js, and styled with Tailwind CSS & Recharts analytics.
+A full-stack medication tracking application with a **React + Vite** frontend and a **FastAPI + SQLite** backend.
 
 ---
 
-## 🚀 Key Features
+## 📋 Prerequisites
 
-1. **Multi-Patient Healthcare Directory**: Manage 12+ patient profiles with Indian medical details, chronic conditions, emergency contacts, and assigned physicians.
-2. **Patient Registration System**: Interactive modal form with input validations, auto-generated Patient IDs (`P013`, `P014`), and instant directory sync.
-3. **Daily Intake Checklist**: Real-time intake logging per patient showing dosages, schedules, and status markers (*Taken*, *Missed*, *Skipped*).
-4. **Adherence Analytics**: Interactive Recharts graphs showing 14-day compliance trends, intake volume comparisons, and rate calculations.
-5. **Monthly Calendar Audit**: Color-coded calendar grids with day-by-day slide drawers.
-6. **Chronological Regimen Timeline**: Vertical node milestones for treatment starts, dose events, and completions.
-7. **Unified Single-Domain Architecture**: Express serves the production React/Vite build from `frontend/dist` with client-side SPA routing support (`app.get('*')`) and relative `/api` endpoints.
+Make sure the following are installed on your system before proceeding:
+
+| Tool       | Minimum Version | Check Command         |
+| ---------- | --------------- | --------------------- |
+| **Node.js** | v18+           | `node --version`      |
+| **npm**     | v9+            | `npm --version`       |
+| **Python**  | 3.10+          | `python --version`    |
+| **pip**     | 22+            | `pip --version`       |
+
+> **Windows users**: Use PowerShell or Command Prompt. If `python` is not recognized, try `py` instead.
+
+---
+
+## 🚀 Quick Start (Two Terminals)
+
+### Terminal 1 — Backend (FastAPI)
+
+```bash
+# 1. Navigate to the backend folder
+cd backend
+
+# 2. (Recommended) Create a virtual environment
+python -m venv venv
+
+# 3. Activate the virtual environment
+#    Windows (PowerShell):
+.\venv\Scripts\Activate.ps1
+#    Windows (CMD):
+.\venv\Scripts\activate.bat
+#    macOS / Linux:
+source venv/bin/activate
+
+# 4. Install Python dependencies
+pip install -r requirements.txt
+
+# 5. Start the FastAPI server
+uvicorn main:app --reload --port 8000
+```
+
+The API will be available at **http://localhost:8000**  
+Interactive API docs at **http://localhost:8000/docs**
+
+---
+
+### Terminal 2 — Frontend (React + Vite)
+
+```bash
+# 1. Navigate to the frontend folder
+cd frontend
+
+# 2. Install all Node.js dependencies
+npm install
+
+# 3. Start the Vite development server
+npm run dev
+```
+
+The app will be available at **http://localhost:5173**
+
+---
+
+## 📦 Dependency Breakdown
+
+### Backend (`backend/requirements.txt`)
+
+| Package              | Purpose                                      |
+| -------------------- | -------------------------------------------- |
+| `fastapi`            | Web framework for building REST APIs         |
+| `uvicorn[standard]`  | ASGI server to run the FastAPI app           |
+| `sqlalchemy`         | ORM for SQLite database interactions         |
+| `pydantic`           | Data validation and serialization            |
+| `httptools`          | Fast HTTP parsing (uvicorn performance)      |
+| `python-dotenv`      | Environment variable loading from `.env`     |
+| `websockets`         | WebSocket support for uvicorn                |
+
+### Frontend (`frontend/package.json`)
+
+| Package              | Purpose                                      |
+| -------------------- | -------------------------------------------- |
+| `react`              | UI component library                         |
+| `react-dom`          | React DOM rendering                          |
+| `react-router-dom`   | Client-side routing / navigation             |
+| `lucide-react`       | Icon library (Pill, Bell, Home, etc.)        |
+| `recharts`           | Charting library for dashboard graphs        |
+| `tailwindcss`        | Utility-first CSS framework                  |
+| `@tailwindcss/vite`  | Tailwind CSS plugin for Vite                 |
+| `@vitejs/plugin-react` | React Fast Refresh for Vite               |
+| `vite`               | Next-gen frontend build tool                 |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-PillSync/
+PillSync-INFY-PROJ/
 ├── backend/
-│   ├── config/              # MongoDB Connection setup & dynamic memory fallback
-│   ├── controllers/         # Patients, Medications, History, Adherence, Dashboard controllers
-│   ├── middleware/          # Async handler, global error middleware
-│   ├── models/              # Mongoose Schemas (Patient, Medication, MedicationLog)
-│   ├── routes/              # Express REST API Routes (/api/patients, /api/medications, etc.)
-│   ├── utils/               # Log sync helper, missed dose audit, multi-patient seeder
-│   ├── app.js               # Express app config & static frontend serving
-│   ├── server.js            # Node listener entry point
-│   └── package.json
+│   ├── main.py              # FastAPI app entry point + seed data
+│   ├── database.py          # SQLAlchemy engine & session setup
+│   ├── models.py            # ORM models (Reminder, Notification)
+│   ├── schemas.py           # Pydantic request/response schemas
+│   ├── requirements.txt     # Python dependencies
+│   ├── pillsync.db          # SQLite database (auto-created)
+│   └── routes/
+│       ├── __init__.py
+│       ├── reminders.py     # /api/reminders CRUD endpoints
+│       └── notifications.py # /api/notifications endpoints
+│
 ├── frontend/
-│   ├── src/
-│   │   ├── components/      # UI Cards, AddPatientModal, spinners, floating toasts
-│   │   ├── context/ font    # Theme Context, Toast Context
-│   │   ├── pages/           # PatientsDashboard, PatientProfile, Forms, Calendars, Analytics, Timelines, Settings
-│   │   ├── services/        # Axios API Client (Relative /api endpoints)
-│   │   ├── index.css        # Tailwind imports, calendar tiles, glassmorphism styles
-│   │   ├── main.jsx         # React bootstrap
-│   │   └── App.jsx          # Router layout shell
-│   ├── index.html           # HTML shell
-│   ├── vite.config.js       # Vite config with dev proxy to localhost:5000
-│   ├── tailwind.config.js   # Tailwind theme configurations
-│   └── package.json
-├── .env.example             # Environment template
-├── package.json             # Root monorepo manager with build & start scripts
-└── README.md
+│   ├── package.json         # Node.js dependencies & scripts
+│   ├── vite.config.js       # Vite + React + Tailwind config
+│   ├── index.html           # HTML entry point
+│   └── src/
+│       ├── main.jsx         # React entry point
+│       ├── App.jsx          # Router + Login + Auth wrapper
+│       ├── api.js           # API client (fetch wrapper)
+│       ├── constants.js     # Colors, slots, seed data
+│       ├── App.css          # Global styles
+│       ├── index.css        # Base styles
+│       ├── components/
+│       │   ├── Header.jsx       # App header with role switch
+│       │   └── BottomNav.jsx    # Bottom navigation bar
+│       └── pages/
+│           ├── DashboardPage.jsx      # Home / Dashboard
+│           ├── RemindersPage.jsx      # Medication reminders
+│           ├── NotificationsPage.jsx  # Notification history
+│           └── ProfilePage.jsx        # User profile
+│
+└── README.md                # ← You are here
 ```
 
 ---
 
-## 🌐 Production Deployment
+## 🔌 API Endpoints
 
-* **Live Application URL**: [https://pillsync-3.onrender.com](https://pillsync-3.onrender.com)
-* **REST API Root**: [https://pillsync-3.onrender.com/api](https://pillsync-3.onrender.com/api)
+### Reminders
 
-PillSync is pre-configured for 1-click single Web Service deployment on **Render**, **Railway**, or **Heroku**.
+| Method   | Endpoint                        | Description                |
+| -------- | ------------------------------- | -------------------------- |
+| `GET`    | `/api/reminders/`              | List all reminders         |
+| `POST`   | `/api/reminders/`              | Create a new reminder      |
+| `PUT`    | `/api/reminders/{id}`          | Update a reminder          |
+| `PATCH`  | `/api/reminders/{id}/taken`    | Mark as taken              |
+| `PATCH`  | `/api/reminders/{id}/missed`   | Mark as missed             |
+| `PATCH`  | `/api/reminders/{id}/snooze`   | Snooze a reminder          |
+| `DELETE` | `/api/reminders/{id}`          | Delete a reminder          |
 
-### Render Setup Steps:
+### Notifications
 
-1. Push your code to your GitHub repository ([https://github.com/sagar101-s/PillSYnc.git](https://github.com/sagar101-s/PillSYnc.git)).
-2. Log in to [Render.com](https://render.com) and click **New +** → **Web Service**.
-3. Select your repository `PillSYnc`.
-4. Configure service settings:
-   * **Name**: `pillsync-3`
-   * **Environment**: `Node`
-   * **Build Command**: `npm run build`
-   * **Start Command**: `npm start`
-5. Add Environment Variables:
-   * `NODE_ENV`: `production`
-   * `PORT`: `5000`
-   * `CLIENT_URL`: `https://pillsync-3.onrender.com`
-   * `MONGO_URI`: `<your_mongodb_atlas_connection_string>`
-   * `JWT_SECRET`: `<your_jwt_secret_key>`
-6. Click **Create Web Service**.
-
-Render will automatically run `npm run build` to compile the Vite frontend into `frontend/dist`, start the Express backend server on Node, and serve both the React interface and REST API endpoints from `https://pillsync-3.onrender.com`!
+| Method   | Endpoint                        | Description                |
+| -------- | ------------------------------- | -------------------------- |
+| `GET`    | `/api/notifications/`          | List notifications         |
+| `GET`    | `/api/notifications/summary`   | Get summary counts         |
+| `DELETE` | `/api/notifications/{id}`      | Delete a notification      |
+| `DELETE` | `/api/notifications/`          | Clear all notifications    |
 
 ---
 
-## 🔧 Local Development Setup
+## 🛠️ Common Issues & Fixes
 
-### 1. Installation
-```bash
-npm run setup
-```
+### "python is not recognized"
+Use `py` instead of `python`, or add Python to your system PATH.
 
-### 2. Run Development Servers Concurrently
-```bash
-npm run dev
-```
+### "npm: command not found"
+Install Node.js from https://nodejs.org (LTS version recommended).
 
-### 3. Re-seed Database
+### Backend port 8000 already in use
 ```bash
-npm run seed
+uvicorn main:app --reload --port 8001
 ```
+Then update `BASE_URL` in `frontend/src/api.js` to `http://localhost:8001`.
+
+### Frontend works without backend
+The frontend has built-in fallback data, so the UI will display demo notifications and reminders even if the backend is not running. Start the backend for full CRUD functionality.
+
+---
+
+## 📝 npm Scripts (Frontend)
+
+| Command           | Description                        |
+| ----------------- | ---------------------------------- |
+| `npm run dev`     | Start Vite dev server (port 5173)  |
+| `npm run build`   | Production build to `dist/`        |
+| `npm run preview` | Preview the production build       |
+| `npm run lint`    | Run oxlint for code quality        |
