@@ -13,20 +13,6 @@ grouped, with a Mark as Taken toggle) since a medicine reminder app needs a
 Tech stack (per project spec): **Django REST Framework** backend, **React
 (Vite)** frontend, **SQLite** database.
 
-## ⚠️ This wasn't run end-to-end here
-
-The sandbox this was built in has no network access to PyPI, npm, or apt, so
-`pip install` / `npm install` couldn't run and I couldn't launch either dev
-server to click through it live. What I *could* do, and did:
-
-- Validated every Python file's syntax with `python -m py_compile` (all pass)
-- Validated every JSX file with a real `esbuild` JSX compile (all pass)
-- Bundled the entire frontend (`main.jsx` + every component + `api.js`) with
-  `esbuild --bundle` to catch cross-file import typos — it resolved cleanly
-
-That catches syntax and wiring errors, but not everything a live run would
-(e.g. a runtime edge case in a Django queryset). Please smoke-test the flows
-below once it's running locally, and let me know if anything breaks.
 
 ## Project structure
 
