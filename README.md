@@ -1,97 +1,222 @@
-# PillSync - Healthcare & Medication Tracking Management System
+# PillSync — Medicine Management (Django REST Framework + React)
 
-A production-ready, unified full-stack **MERN Healthcare & Medication Tracking System** built with MongoDB, Express, React, Node.js, and styled with Tailwind CSS & Recharts analytics.
+- **Medicine Management** — Add / Edit / Delete / View medicines
+- **Disease Categories** — group medicines by the condition they treat
+- **Prescription Storage** — upload and store prescription files (PDF/image)
+- **Medicine Stock** — quantity tracking, low-stock + refill-soon alerts
+- **Dosage Information** — structured reminder schedule (no free-text frequency)
 
----
+Plus a **Today's Reminders** dashboard (Morning/Afternoon/Night,
+grouped, with a Mark as Taken toggle) since a medicine reminder app needs a
+"did I take it" screen, not just a data table.
 
-## 🚀 Key Features
+Tech stack (per project spec): **Django REST Framework** backend, **React
+(Vite)** frontend, **SQLite** database.
 
-1. **Multi-Patient Healthcare Directory**: Manage 12+ patient profiles with Indian medical details, chronic conditions, emergency contacts, and assigned physicians.
-2. **Patient Registration System**: Interactive modal form with input validations, auto-generated Patient IDs (`P013`, `P014`), and instant directory sync.
-3. **Daily Intake Checklist**: Real-time intake logging per patient showing dosages, schedules, and status markers (*Taken*, *Missed*, *Skipped*).
-4. **Adherence Analytics**: Interactive Recharts graphs showing 14-day compliance trends, intake volume comparisons, and rate calculations.
-5. **Monthly Calendar Audit**: Color-coded calendar grids with day-by-day slide drawers.
-6. **Chronological Regimen Timeline**: Vertical node milestones for treatment starts, dose events, and completions.
-7. **Unified Single-Domain Architecture**: Express serves the production React/Vite build from `frontend/dist` with client-side SPA routing support (`app.get('*')`) and relative `/api` endpoints.
+## ⚠️ This wasn't run end-to-end here
 
----
+The sandbox this was built in has no network access to PyPI, npm, or apt, so
+`pip install` / `npm install` couldn't run and I couldn't launch either dev
+server to click through it live. What I *could* do, and did:
 
-## 📁 Project Structure
+- Validated every Python file's syntax with `python -m py_compile` (all pass)
+- Validated every JSX file with a real `esbuild` JSX compile (all pass)
+- Bundled the entire frontend (`main.jsx` + every component + `api.js`) with
+  `esbuild --bundle` to catch cross-file import typos — it resolved cleanly
+
+That catches syntax and wiring errors, but not everything a live run would
+(e.g. a runtime edge case in a Django queryset). Please smoke-test the flows
+below once it's running locally, and let me know if anything breaks.
+
+## Project structure
 
 ```
-PillSync/
+pillsync-django/
 ├── backend/
-│   ├── config/              # MongoDB Connection setup & dynamic memory fallback
-│   ├── controllers/         # Patients, Medications, History, Adherence, Dashboard controllers
-│   ├── middleware/          # Async handler, global error middleware
-│   ├── models/              # Mongoose Schemas (Patient, Medication, MedicationLog)
-│   ├── routes/              # Express REST API Routes (/api/patients, /api/medications, etc.)
-│   ├── utils/               # Log sync helper, missed dose audit, multi-patient seeder
-│   ├── app.js               # Express app config & static frontend serving
-│   ├── server.js            # Node listener entry point
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/      # UI Cards, AddPatientModal, spinners, floating toasts
-│   │   ├── context/ font    # Theme Context, Toast Context
-│   │   ├── pages/           # PatientsDashboard, PatientProfile, Forms, Calendars, Analytics, Timelines, Settings
-│   │   ├── services/        # Axios API Client (Relative /api endpoints)
-│   │   ├── index.css        # Tailwind imports, calendar tiles, glassmorphism styles
-│   │   ├── main.jsx         # React bootstrap
-│   │   └── App.jsx          # Router layout shell
-│   ├── index.html           # HTML shell
-│   ├── vite.config.js       # Vite config with dev proxy to localhost:5000
-│   ├── tailwind.config.js   # Tailwind theme configurations
-│   └── package.json
-├── .env.example             # Environment template
-├── package.json             # Root monorepo manager with build & start scripts
-└── README.md
+│   ├── manage.py
+│   ├── requirements.txt
+│   ├── pillsync/              # project settings, urls, wsgi/asgi
+│   ├── medicines/             # DiseaseCategory, Medicine, MedicineSchedule, DoseLog
+│   │   ├── models.py            # stock/dosage logic lives here (see below)
+│   │   ├── serializers.py       # nested schedule create/update
+│   │   ├── views.py             # CRUD + stock + today's-schedule + mark/undo taken
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── migrations/0001_initial.py   # hand-written (see note below)
+│   │   └── management/commands/seed.py  # sample data
+│   └── prescriptions/         # Prescription model/serializer/views
+│       └── migrations/0001_initial.py
+└── frontend/
+    ├── package.json
+    ├── vite.config.js          # proxies /api -> http://127.0.0.1:8000
+    ├── index.html
+    └── src/
+        ├── main.jsx, App.jsx, api.js, index.css
+        └── components/
+            ├── Sidebar.jsx, Toast.jsx
+            ├── Dashboard.jsx              # Today's Reminders + stats
+            ├── MedicinesView.jsx, MedicineModal.jsx, ScheduleBuilder.jsx
+            ├── CategoriesView.jsx, CategoryModal.jsx
+            └── PrescriptionsView.jsx, PrescriptionModal.jsx
 ```
 
----
+## Setup
 
-## 🌐 Production Deployment
+### 1. Backend (Django)
 
-* **Live Application URL**: [https://pillsync-3.onrender.com](https://pillsync-3.onrender.com)
-* **REST API Root**: [https://pillsync-3.onrender.com/api](https://pillsync-3.onrender.com/api)
-
-PillSync is pre-configured for 1-click single Web Service deployment on **Render**, **Railway**, or **Heroku**.
-
-### Render Setup Steps:
-
-1. Push your code to your GitHub repository ([https://github.com/sagar101-s/PillSYnc.git](https://github.com/sagar101-s/PillSYnc.git)).
-2. Log in to [Render.com](https://render.com) and click **New +** → **Web Service**.
-3. Select your repository `PillSYnc`.
-4. Configure service settings:
-   * **Name**: `pillsync-3`
-   * **Environment**: `Node`
-   * **Build Command**: `npm run build`
-   * **Start Command**: `npm start`
-5. Add Environment Variables:
-   * `NODE_ENV`: `production`
-   * `PORT`: `5000`
-   * `CLIENT_URL`: `https://pillsync-3.onrender.com`
-   * `MONGO_URI`: `<your_mongodb_atlas_connection_string>`
-   * `JWT_SECRET`: `<your_jwt_secret_key>`
-6. Click **Create Web Service**.
-
-Render will automatically run `npm run build` to compile the Vite frontend into `frontend/dist`, start the Express backend server on Node, and serve both the React interface and REST API endpoints from `https://pillsync-3.onrender.com`!
-
----
-
-## 🔧 Local Development Setup
-
-### 1. Installation
 ```bash
-npm run setup
+cd pillsync-django/backend
+python3 -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+
+pip install -r requirements.txt
+
+python manage.py migrate
+python manage.py seed            # optional: sample categories/medicines
+python manage.py createsuperuser # optional: to use /admin/
+
+python manage.py runserver       # http://127.0.0.1:8000
 ```
 
-### 2. Run Development Servers Concurrently
+**Note on migrations:** `medicines/migrations/0001_initial.py` and
+`prescriptions/migrations/0001_initial.py` are hand-written (no network
+meant no `makemigrations` could run against a real Django install here).
+They match the models field-for-field, but if `migrate` complains about
+anything, delete both migration files' contents except a bare
+`initial = True` migration, run `python manage.py makemigrations`, and it
+will regenerate them correctly from the models.
+
+### 2. Frontend (React + Vite)
+
+In a second terminal:
+
 ```bash
-npm run dev
+cd pillsync-django/frontend
+npm install
+npm run dev               # http://localhost:5173
 ```
 
-### 3. Re-seed Database
+Open `http://localhost:5173`. The Vite dev server proxies `/api` and
+`/media` requests to Django on port 8000 (see `vite.config.js`), so the
+React app just calls relative paths like `/api/medicines/`.
+
+## API Reference
+
+All endpoints are under `/api/`. Django REST Framework's router adds
+trailing slashes — that's expected, not a typo.
+
+### Medicines — CRUD Medicines, Get Medicines
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/medicines/` | List. Query params: `search`, `category_id`, `low_stock=true`, `refill_soon=true`, `sort_by` (`name`\|`stock_asc`\|`stock_desc`\|`expiry`), `page`, `per_page` |
+| `GET` | `/api/medicines/<id>/` | Get one |
+| `POST` | `/api/medicines/` | Add |
+| `PUT`/`PATCH` | `/api/medicines/<id>/` | Edit |
+| `DELETE` | `/api/medicines/<id>/` | Delete |
+| `POST` | `/api/medicines/<id>/stock/` | Adjust stock: `{"change": 10}` or `{"change": -5}` |
+
+A medicine's `dosage_frequency`, `doses_per_day`, `estimated_days_remaining`,
+and `refill_soon` are **never sent by the client** — they're computed
+server-side from the `schedule` array and current stock. Example: 60 tablets
+at 2 reminders/day → 30 days remaining (the spec's own worked example).
+
+Example — add a medicine with a twice-daily schedule:
 ```bash
-npm run seed
+curl -X POST http://127.0.0.1:8000/api/medicines/ \
+  -H "Content-Type: application/json" \
+  -d '{
+        "name": "Ibuprofen",
+        "manufacturer": "Pfizer",
+        "dosage_amount": "200",
+        "dosage_unit": "mg",
+        "dosage_form": "Tablet",
+        "quantity_per_dose": 1,
+        "stock_quantity": 50,
+        "reorder_level": 10,
+        "unit_price": 0.10,
+        "expiry_date": "2027-01-01",
+        "category": 1,
+        "schedule": [
+          {"period": "Morning", "reminder_time": "08:00"},
+          {"period": "Night", "reminder_time": "21:00"}
+        ]
+      }'
 ```
+Each schedule slot is just `period` (`Morning`/`Afternoon`/`Evening`/`Night`)
++ optional `reminder_time` (`"HH:MM"`, 24h) — no meal/breakfast fields.
+Sending `schedule` on `PUT`/`PATCH` fully replaces the existing schedule;
+omitting it (a partial `PATCH`) leaves it untouched.
+
+### Disease Categories
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/categories/` | List |
+| `POST` | `/api/categories/` | Add: `{"name": "...", "description": "..."}` |
+| `PATCH` | `/api/categories/<id>/` | Edit |
+| `DELETE` | `/api/categories/<id>/` | Delete — medicines in it become **uncategorized**, not deleted |
+
+Seeded categories match the spec's disease-based organization list: Blood
+Pressure, Diabetes, Thyroid, Antibiotics, Vitamins, Heart Medications.
+
+### Prescriptions — Upload Prescription
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/prescriptions/` | Multipart: `file`, `patient_name`, `doctor_name` (optional), `notes` (optional), `medicine` (optional, medicine id) |
+| `GET` | `/api/prescriptions/` | List. Query params: `search`, `medicine_id` |
+| `GET` | `/api/prescriptions/<id>/` | Get one |
+| `DELETE` | `/api/prescriptions/<id>/` | Delete (also removes the stored file) |
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/prescriptions/ \
+  -F "patient_name=John Doe" \
+  -F "doctor_name=Dr. Smith" \
+  -F "notes=Follow up in 2 weeks" \
+  -F "medicine=1" \
+  -F "file=@/path/to/prescription.pdf"
+```
+
+### Dashboard: Today's Reminders + Mark as Taken
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/schedule/today/` | Every reminder slot grouped by period, with today's taken/not-taken status |
+| `POST` | `/api/schedule/<schedule_id>/take/` | Mark today's dose taken (deducts `quantity_per_dose` from stock; idempotent) |
+| `POST` | `/api/schedule/<schedule_id>/undo/` | Undo — restores the deducted stock |
+
+## Database models
+
+**DiseaseCategory** — id, name, description.
+
+**Medicine** — id, name, manufacturer, dosage_amount, dosage_unit,
+dosage_form, quantity_per_dose, stock_quantity, reorder_level, unit_price,
+expiry_date, description, category (FK → DiseaseCategory, `SET_NULL`),
+created_at, updated_at. `dosage_frequency`, `doses_per_day`,
+`low_stock`, `estimated_days_remaining`, `refill_soon` are computed
+properties, never stored.
+
+**MedicineSchedule** — id, medicine (FK, `CASCADE`), period, reminder_time,
+sort_order. One row per reminder slot.
+
+**DoseLog** — id, medicine (FK, `CASCADE`), schedule (FK, `CASCADE`),
+log_date, taken_at. Unique on (schedule, log_date) — marking taken twice in
+one day is a no-op, and undo just deletes today's row.
+
+**Prescription** — id, patient_name, doctor_name, notes, medicine (FK →
+Medicine, `SET_NULL`), file, original_filename, uploaded_at.
+
+## Notes
+
+- **No auth yet.** `REST_FRAMEWORK["DEFAULT_PERMISSION_CLASSES"]` is
+  `AllowAny` — the spec's Patient/Caregiver/Admin auth module is a separate
+  piece of work. `MedicineSchedule` is deliberately structured so a `user`
+  FK can be added later without a redesign.
+- Uploaded files are renamed to a UUID on disk (`prescriptions/<uuid>.<ext>`);
+  the original filename is kept in the DB for display only.
+- Allowed prescription types: pdf, png, jpg, jpeg, gif, webp, 10 MB max —
+  both configurable in `settings.py` (`ALLOWED_PRESCRIPTION_EXTENSIONS`,
+  `MAX_PRESCRIPTION_SIZE`).
+- Deleting a medicine unlinks (doesn't delete) any prescriptions that
+  referenced it; deleting a category uncategorizes its medicines.
+- DRF's default validation error format is `{"field": ["message"]}` — the
+  frontend's `api.js` unwraps this automatically for the toast/error UI.
+- CORS is wide open in `DEBUG` mode for local dev convenience — tighten
+  `CORS_ALLOWED_ORIGINS` / turn off `CORS_ALLOW_ALL_ORIGINS` for production.
